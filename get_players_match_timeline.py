@@ -178,7 +178,17 @@ class PlayerMatchTimelineDownloader:
             start *= 10
             bulk_count += 1
         
+    def download_n_players_rank_timeline(self, n: int, save_directory: str, queue: LeagueQueue, tier: LeagueTier, division: Optional[LeagueDivision] = None):
+        if not os.path.exists('rank_timelines'):
+            os.makedirs('rank_timelines')
+        
+        # Get a year's worth of match timeline from N Challenger players
+        top_n_players_by_rank = self.get_top_n_players_by_rank(n, queue, tier, division)
+        time.sleep(1) # sleep for 1 second
+        for p_player in top_n_players_by_rank:
+            self.download_players_yearly_match_timeline(p_player, os.path.join('rank_timelines', save_directory))
             
+        print(f"Successfully downloaded {n} player(s) year's worth of match timeline from {tier}{f' {division}' if division else ''} in {queue}!")
             
         
         
@@ -188,9 +198,54 @@ if __name__ == '__main__':
     assert load_dotenv() == True
     # Get the top 10 challenger players from League-V4 API
     downloader = PlayerMatchTimelineDownloader()
+        
+    # Get a year's worth of match timeline from 10 Challenger players
+    downloader.download_n_players_rank_timeline(10, 'challenger_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.CHALLENGER)
     
-    top_10_challengers = downloader.get_top_n_players_by_rank(10, LeagueQueue.RANKED_SOLO_5x5, LeagueTier.CHALLENGER)
-    time.sleep(1) # sleep for 1 second
-    for p_challenger in top_10_challengers:
-        downloader.download_players_yearly_match_timeline(p_challenger, 'challenger_timelines')
+    # Get a year's worth of match timeline from 10 Grandmaster players
+    downloader.download_n_players_rank_timeline(10, 'grandmaster_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GRANDMASTER)
     
+    # Get a year's worth of match timeline from 10 Master players
+    downloader.download_n_players_rank_timeline(10, 'master_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.MASTER)
+    
+    # Get a year's worth of match timeline from 10 Diamond players
+    downloader.download_n_players_rank_timeline(10, 'diamond_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'diamond_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'diamond_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'diamond_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Emerald players
+    downloader.download_n_players_rank_timeline(10, 'emerald_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'emerald_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'emerald_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'emerald_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Platinum players
+    downloader.download_n_players_rank_timeline(10, 'platinum_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'platinum_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'platinum_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'platinum_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Gold players
+    downloader.download_n_players_rank_timeline(10, 'gold_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'gold_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'gold_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'gold_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Silver players
+    downloader.download_n_players_rank_timeline(10, 'silver_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'silver_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'silver_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'silver_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Bronze players
+    downloader.download_n_players_rank_timeline(10, 'bronze_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'bronze_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'bronze_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'bronze_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.IV)
+    
+    # Get a year's worth of match timeline from 10 Iron players
+    downloader.download_n_players_rank_timeline(10, 'iron_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.I)
+    downloader.download_n_players_rank_timeline(10, 'iron_II_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.II)
+    downloader.download_n_players_rank_timeline(10, 'iron_III_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.III)
+    downloader.download_n_players_rank_timeline(10, 'iron_IV_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.IV)
