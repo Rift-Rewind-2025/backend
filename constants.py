@@ -1,4 +1,8 @@
 from enum import Enum
+
+MAP_WIDTH = 16000
+MAP_HEIGHT = 16000
+
 LANE_POSITION = ("Top", "Jungle", "Middle", "Bottom", "Utility")
 
 class LeagueTier(Enum):
@@ -15,10 +19,10 @@ class LeagueTier(Enum):
     CHALLENGER = "challenger"
     
 class LeagueDivision(Enum):
-    I = 1
-    II = 2
-    III = 3
-    IV = 4
+    I = 'I'
+    II = 'II'
+    III = 'III'
+    IV = 'IV'
     
 class LeagueQueue(Enum):
     RANKED_SOLO_5x5 = "RANKED_SOLO_5x5"

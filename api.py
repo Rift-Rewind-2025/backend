@@ -1,18 +1,16 @@
 import os
 import requests
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
 
 LANE_POSITION = ("Top", "Jungle", "Middle", "Bottom", "Utility")
 
 class RiotAPI:
-    def __init__(self):
-        self.puuid = None
+    def __init__(self, game_name: str, tag_name: str):
+        self.puuid = self.__get_puuid(game_name, tag_name)
         self.__api_key = os.environ['RIOT_API_KEY']
         assert self.__api_key is not None
-        self.match_list = list()
         self.session = requests.Session()
         self.session.headers.update({
             'X-Riot-Token': self.__api_key,
@@ -20,11 +18,11 @@ class RiotAPI:
 
 
 
-    def get_puuid(self, gameName: str, tagName: str) -> None:
+    def __get_puuid(self, game_name: str, tag_name: str) -> None:
         try:
-            puuid_res = self.session.get(f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagName}')
+            puuid_res = self.session.get(f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_name}')
             puuid_res.raise_for_status()
-            self.puuid = puuid_res.json()["puuid"]
+            return puuid_res.json()["puuid"]
         except requests.exceptions.HTTPError as e:
             print('Request Error:', e)
 
@@ -47,7 +45,7 @@ class RiotAPI:
             for matches in match_arr:
                 match_data = self.session.get(f'https://americas.api.riotgames.com/lol/match/v5/matches/{matches}')
                 match_data.raise_for_status()
-                self.match_list.append(match_data.json())
+                return match_data.json()
         except requests.exceptions.HTTPError as e:
             print('Request Error:', e)
 
@@ -65,10 +63,8 @@ class RiotAPI:
 
 
 if __name__ == '__main__':
-    api = RiotAPI()
-    api.get_puuid('WotterMelown', 'NA1')
+    api = RiotAPI('WotterMelown', 'NA1')
     match_arr = api.get_match_ids_by_puuid()
-    api.get_match_by_id(match_arr)
     current_match_timeline = api.get_match_by_timeline(match_arr[0])
     player_team = ""
     blueTeam = []
