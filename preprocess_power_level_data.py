@@ -26,6 +26,7 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
         
         for match_timelines_folder in os.listdir(os.path.join(base_folder, puuid)):
             # read in the file as a json object
+            print(match_timelines_folder)
             with open(os.path.join(base_folder, puuid, match_timelines_folder), 'r', encoding='utf-8') as f:
                 match_timelines = json.load(f)
                 # for match_timeline in match_timelines:
@@ -71,6 +72,7 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
                     first_blood_taken = 0
                     role_position = LANE_POSITION[player_idx % 5]
                     champion_name = None
+                    vision_score = 0
                     for frames in match_timeline['info']['frames']:
                         for event in frames['events']:
                             if event['type'] in ['CHAMPION_KILL', 'CHAMPION_SPECIAL_KILL']:
@@ -132,11 +134,14 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
                                 killerId = event['killerId'] - 1
                                 if player_idx == killer_id:
                                     total_wards_destroyed += 1
-                    # TODO: get vision score
-                    power_level_dataset.loc[len(power_level_dataset)] = [match_id, total_gold, total_kills, total_wards_placed, total_wards_destroyed, total_deaths, total_assists]
+                    # TODO: get vision score, total damage dealt, total damage received, kill participation, turret plate taken from match api
+                    power_level_dataset.loc[len(power_level_dataset)] = [match_id, total_gold, total_wards_placed, total_wards_destroyed, 
+                                                                        vision_score, total_kills, total_deaths, total_assists, total_tower_destroyed, 
+                                                                        heralds_killed, barons_killed, dragons_killed, role_position, champion_name, 
+                                                                        total_damage_dealt, total_damage_taken, cs_count, first_blood_taken, total_tower_plates_taken]
     
-    
+        power_level_dataset.to_csv(f'power_level_{puuid}.csv', index=True)
 
 if __name__ == '__main__':
-    main()
+    main('', LeagueTier.SILVER, LeagueDivision.II)
         
