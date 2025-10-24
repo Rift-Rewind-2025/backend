@@ -218,3 +218,4 @@ __marimo__/
 # Specific files
 match_timeline*.json
 *timelines/
+power_level*.csv

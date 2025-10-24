@@ -106,16 +106,16 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
                                     total_assists += 1
 
                             elif event['type'] == 'BUILDING_KILL':
-                                killerId = event['killerId'] - 1
-                                if player_idx == killerId or (player_idx + 1) in event.get('assistingParticipantIds', []):
+                                killer_id = event['killerId'] - 1
+                                if player_idx == killer_id or (player_idx + 1) in event.get('assistingParticipantIds', []):
                                     total_tower_destroyed += 1
                                 
                                 # TODO: find count of tower plates taken and minute first tower plate was taken
                             elif event['type'] == 'ELITE_MONSTER_KILL':
                                 monster_type = event.get('monsterType', '')
-                                killerId = event['killerId'] - 1
+                                killer_id = event['killerId'] - 1
                                 
-                                if player_idx == killerId or (player_idx + 1) in event.get('assistingParticipantIds', []):
+                                if player_idx == killer_id or (player_idx + 1) in event.get('assistingParticipantIds', []):
                                     if monster_type == 'RIFTHERALD':
                                         heralds_killed += 1
                                     elif monster_type == 'BARON_NASHOR':
@@ -123,7 +123,7 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
                                     elif monster_type in ['DRAGON', 'ELDER_DRAGON']:
                                         dragons_killed += 1
                             elif event['type'] == 'TURRET_PLATE_DESTROYED':
-                                killerId = event['killerId'] - 1
+                                killer_id = event['killerId'] - 1
                                 if player_idx == killer_id:
                                     total_tower_plates_taken += 1
                             elif event['type'] == 'WARD_PLACED':
@@ -131,7 +131,7 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
                                 if player_idx == creator_id:
                                     total_wards_placed += 1
                             elif event['type'] == 'WARD_KILL':
-                                killerId = event['killerId'] - 1
+                                killer_id = event['killerId'] - 1
                                 if player_idx == killer_id:
                                     total_wards_destroyed += 1
                     # TODO: get vision score, total damage dealt, total damage received, kill participation, turret plate taken from match api
@@ -143,5 +143,5 @@ def main(match_folder_dir: str, tier: LeagueTier, division: Optional[LeagueDivis
         power_level_dataset.to_csv(f'power_level_{puuid}.csv', index=True)
 
 if __name__ == '__main__':
-    main('', LeagueTier.SILVER, LeagueDivision.II)
+    main('rank_timelines', LeagueTier.CHALLENGER)
         

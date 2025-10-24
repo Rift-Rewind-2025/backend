@@ -175,7 +175,7 @@ class PlayerMatchTimelineDownloader:
             with open(os.path.join(save_directory, puuid, f'match_timeline_bulk_{bulk_count}.json'), 'w+', encoding='utf-8') as f:
                 f.write(json.dumps(match_timelines, indent=4))
             
-            start *= 10
+            start += count
             bulk_count += 1
         
     def download_n_players_rank_timeline(self, n: int, save_directory: str, queue: LeagueQueue, tier: LeagueTier, division: Optional[LeagueDivision] = None):
@@ -200,13 +200,13 @@ if __name__ == '__main__':
     downloader = PlayerMatchTimelineDownloader()
         
     # Get a year's worth of match timeline from 1 Challenger players
-    # downloader.download_n_players_rank_timeline(1, 'challenger_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.CHALLENGER)
+    downloader.download_n_players_rank_timeline(1, 'challenger_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.CHALLENGER)
     
     # Get a year's worth of match timeline from 1 Grandmaster players
-    # downloader.download_n_players_rank_timeline(1, 'grandmaster_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GRANDMASTER)
+    downloader.download_n_players_rank_timeline(1, 'grandmaster_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GRANDMASTER)
     
     # Get a year's worth of match timeline from 1 Master players
-    # downloader.download_n_players_rank_timeline(1, 'master_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.MASTER)
+    downloader.download_n_players_rank_timeline(1, 'master_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.MASTER)
     
     # Get a year's worth of match timeline from 1 Diamond players
     # downloader.download_n_players_rank_timeline(1, 'diamond_I_timelines', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.I)
