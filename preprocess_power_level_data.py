@@ -39,103 +39,33 @@ class PowerLevelSystem(RiotRateLimitAPI):
                 print(match_timelines_folder)
                 with open(os.path.join(base_folder, puuid, match_timelines_folder), 'r', encoding='utf-8') as f:
                     match_timelines = json.load(f)
-                    # for match_timeline in match_timelines:
-                    #     player_idx = match_timeline['metadata']['participants'].index(puuid)
-                    #     match_id = match_timeline['metadata']['matchId']
-                    #     team_side = 'blue' if player_idx < 5 else 'red'
-                    #     prev_gold_diff = [0, 0]
-                    #     blue_tower_taken, red_tower_taken = 0, 0 # amount of towers taken from blue and red team
-                        
-                    #     for frames in match_timeline['info']['frames']:
-                    #         # get team gold difference for both teams
-                    #         gold_diff = [0, 0] # [blue, red]
-                    #         for partiFrames in frames['participantFrames']:
-                    #             p_frames = int(partiFrames) - 1
-                    #             gold_diff[(p_frames >= 5) * 1] += frames['participantFrames'][partiFrames]['totalGold']
-                    #         # get team kills last 60s
-                    #         # get team deaths last 60s
-                    #         team_deaths = [0, 0] # [blue, red]
-                    #         team_kills = [0, 0] # [blue, red]
-                    #         for event in frames['events']:
-                    #             if event['type'] in ['CHAMPION_KILL', 'CHAMPION_SPECIAL_KILL']:
-                    #                 killer_id = event['killerId'] - 1
-                    #                 team_kills[(killer_id >= 5) * 1] += 1
-                    #                 team_deaths[(killer_id < 5) * 1] += 1 # the opposite
-                                    
-                    #         # do blue side
-                    #         win_prob_dataset.loc[idx, 'match_id'] = match_id
-                    #         win_prob_dataset.loc[idx, 'timestamp_ms'] = frames['timestamp']
-                    #         win_prob_dataset.loc[idx, 'side'] = 'blue'
-                    #         win_prob_dataset.loc[idx, 'team_gold_diff'] = gold_diff[0] - gold_diff[1]
-                    #         # get the difference in gold difference for each team
-                    #         win_prob_dataset.loc[idx, 'team_gold_diff_delta60'] = gold_diff[0] - prev_gold_diff[0]
-                    #         win_prob_dataset.loc[]
-                    
                     for match_timeline in match_timelines:
                         player_idx = match_timeline['metadata']['participants'].index(puuid)
                         match_id = match_timeline['metadata']['matchId']
                         
                         match_obj = self.call_endpoint_with_rate_limit(self.match_url.format(match_id=match_id), rate_limits, rate_history)
-
-                        vision_score = match_obj['info']['participants'][player_idx]['visionScore']
-                        champion_name = match_obj['info']['participants'][player_idx]['championName']
-                        total_damage_dealt = match_obj['info']['participants'][player_idx]['totalDamageDealtToChampions']
-                        total_damage_taken = match_obj['info']['participants'][player_idx]['totalDamageTaken']
-                        total_wards_placed = match_obj['info']['participants'][player_idx]['wardsPlaced']
-                        total_wards_destroyed = match_obj['info']['participants'][player_idx]['wardsKilled']
-                        cs_count = match_obj['info']['participants'][player_idx]['totalMinionsKilled'] + match_obj['info']['participants'][player_idx]['totalAllyJungleMinionsKilled'] + match_obj['info']['participants'][player_idx]['totalEnemyJungleMinionsKilled']
-                        
-                        total_gold = match_timeline['info']['frames'][-1]['participantFrames'][str(player_idx + 1)]['totalGold']
-                        # TODO: should I combine both minionsKilled and jungleMinionsKilled counts together?
-                        total_kills = total_deaths = total_assists = total_tower_destroyed = heralds_killed = barons_killed = dragons_killed = total_tower_plates_taken = 0
-                        first_blood_taken = 0
+                        participants = match_obj['info']['participants'][player_idx]
+                        vision_score = participants['visionScore']
+                        champion_name = participants['championName']
+                        total_damage_dealt = participants['totalDamageDealtToChampions']
+                        total_damage_taken = participants['totalDamageTaken']
+                        total_wards_placed = participants['wardsPlaced']
+                        total_wards_destroyed = participants['wardsKilled']
+                        cs_count = participants['totalMinionsKilled'] + participants['totalAllyJungleMinionsKilled'] + participants['totalEnemyJungleMinionsKilled']
+                        total_kills = participants['kills']
+                        total_assists = participants['assists']
+                        total_deaths = participants['deaths']
+                        total_gold = participants['goldEarned']
+                        first_blood_taken = participants['firstBloodKill'] * 1
                         role_position = LANE_POSITION[player_idx % 5]
                         
+                        # OBJECTIVE PARTICIPATION (where player actually helped with objectives)
+                        heralds_killed = participants['challenges']['riftHeraldTakedowns'] 
+                        barons_killed = participants['challenges']['baronTakedowns'] 
+                        dragons_killed = participants['challenges']['dragonTakedowns']
+                        total_tower_destroyed = participants['challenges']['turretTakedowns']
+                        total_tower_plates_taken = participants['challenges']['turretPlatesTaken']                     
                         
-                        for frames in match_timeline['info']['frames']:
-                            for event in frames['events']:
-                                if event['type'] in ['CHAMPION_KILL', 'CHAMPION_SPECIAL_KILL']:
-                                    killer_id = event['killerId'] - 1
-                                    victim_id = event.get('victimId', 0) - 1
-                                    if event.get('killType', '') == 'FIRST_BLOOD_KILL' and player_idx == killer_id:
-                                        first_blood_taken += 1
-                                        continue
-                                    # if user killed another player
-                                    if player_idx == killer_id:
-                                        total_kills += 1
-                            
-                                    
-                                    # if user was killed by another player
-                                    if player_idx == victim_id:
-                                        total_deaths += 1
-                                
-                                        
-                                    # if user participated in the kill (assist)
-                                    if (player_idx + 1) in event.get('assistingParticipantIds', []):
-                                        total_assists += 1
-
-                                elif event['type'] == 'BUILDING_KILL':
-                                    killer_id = event['killerId'] - 1
-                                    if player_idx == killer_id or (player_idx + 1) in event.get('assistingParticipantIds', []):
-                                        total_tower_destroyed += 1
-                                    
-                                    # TODO: find count of tower plates taken and minute first tower plate was taken
-                                elif event['type'] == 'ELITE_MONSTER_KILL':
-                                    monster_type = event.get('monsterType', '')
-                                    killer_id = event['killerId'] - 1
-                                    
-                                    if player_idx == killer_id or (player_idx + 1) in event.get('assistingParticipantIds', []):
-                                        if monster_type == 'RIFTHERALD':
-                                            heralds_killed += 1
-                                        elif monster_type == 'BARON_NASHOR':
-                                            barons_killed += 1
-                                        elif monster_type in ['DRAGON', 'ELDER_DRAGON']:
-                                            dragons_killed += 1
-                                elif event['type'] == 'TURRET_PLATE_DESTROYED':
-                                    killer_id = event['killerId'] - 1
-                                    if player_idx == killer_id:
-                                        total_tower_plates_taken += 1
-
                         # TODO: get vision score, total damage dealt, total damage received, kill participation, turret plate taken from match api
                         power_level_dataset.loc[len(power_level_dataset)] = [match_id, total_gold, total_wards_placed, total_wards_destroyed, 
                                                                             vision_score, total_kills, total_deaths, total_assists, total_tower_destroyed, 
