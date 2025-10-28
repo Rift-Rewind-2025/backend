@@ -5,13 +5,13 @@ on:
   push:
     branches: [ "main", "development" ] # push events on main branch
     # paths:
-    #   - "preprocess-power-level/**"
+    #   - "preprocess-power-level/**" # TODO: UNCOMMENT WHEN YML FILE IS READY
     #   - "services/**"
     #   - "libs/**"
     #   - "requirements.txt"
 
 env:
-  PYTHON_VERSION: "3.7"
+  PYTHON_VERSION: "3.12"
   BASE_FOLDER_NAME: "preprocess-power-level"
 
 # the job defines a series of steps that execute on the same runner
