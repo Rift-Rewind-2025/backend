@@ -4,18 +4,12 @@ on:
   # Trigger the workflow on push
   push:
     branches: [ "main" ] # push events on main branch
-    paths:
-      - "preprocess-power-level/**"
-      - "services/**"
-      - "libs/**"
-      - "requirements.txt"
-  pull_request:
-    branches: [ "main" ] # pull request events on main branch
-    paths:
-      - "preprocess-power-level/**"
-      - "services/**"
-      - "libs/**"
-      - "requirements.txt"
+    # paths:
+    #   - "preprocess-power-level/**"
+    #   - "services/**"
+    #   - "libs/**"
+    #   - "requirements.txt"
+
 env:
   PYTHON_VERSION: "3.7"
   BASE_FOLDER_NAME: "preprocess-power-level"
@@ -24,7 +18,7 @@ env:
 jobs:
   CI:
     # Define the runner used in the workflow
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       # Check out repo so our workflow can access it
       - uses: actions/checkout@v4
