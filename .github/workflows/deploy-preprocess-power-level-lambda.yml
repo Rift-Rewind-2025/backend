@@ -3,7 +3,7 @@ name: Deploy Preprocess Power Level Lambda
 on:
   # Trigger the workflow on push
   push:
-    branches: [ "main" ] # push events on main branch
+    branches: [ "main", "development" ] # push events on main branch
     # paths:
     #   - "preprocess-power-level/**"
     #   - "services/**"
