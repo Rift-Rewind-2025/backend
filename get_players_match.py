@@ -5,7 +5,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from collections import defaultdict
 from constants import LeagueTier, LeagueDivision, LeagueQueue
-from riot_rate_limit_api import RiotRateLimitAPI
+from lib.common.riot_rate_limit_api import RiotRateLimitAPI
 
 
 class PlayerMatchDownloader(RiotRateLimitAPI):

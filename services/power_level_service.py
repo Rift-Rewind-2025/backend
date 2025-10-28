@@ -1,11 +1,11 @@
 import pandas as pd
 import os, json
 from collections import defaultdict
-from constants import LeagueTier, LeagueDivision, LANE_POSITION
+from ..constants import LeagueTier, LeagueDivision, LANE_POSITION
 from typing import Optional
-from riot_rate_limit_api import RiotRateLimitAPI
+from ..lib.common.riot_rate_limit_api import RiotRateLimitAPI
 
-class PowerLevelSystem(RiotRateLimitAPI):
+class PowerLevelService(RiotRateLimitAPI):
     def __init__(self):
         super().__init__()
         self.match_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'
@@ -329,6 +329,6 @@ class PowerLevelSystem(RiotRateLimitAPI):
                             power_level_dataset.drop(power_level_dataset.index, inplace=True)
 
 if __name__ == '__main__':
-    power_level = PowerLevelSystem()
+    power_level = PowerLevelService()
     power_level.preprocess('rank_timelines', 20, LeagueTier.CHALLENGER)
         
