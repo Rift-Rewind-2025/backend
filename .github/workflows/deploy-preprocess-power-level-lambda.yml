@@ -36,7 +36,7 @@ jobs:
       # Step-3 Setup Virtual ENV
       # cache dependencies
       - name: Virtual ENV
-        use: actions/cache@v4
+        uses: actions/cache@v4
         id: cache-env # name for referring later
         with:
           path: venv # what we cache: the virtual env
