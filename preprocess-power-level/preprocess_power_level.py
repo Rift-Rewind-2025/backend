@@ -17,7 +17,7 @@ def lambda_handler(event, context):
         event: Dict containing the Lambda function event data
         context: Lambda runtime context
     '''
-    
+    out = []
     for rec in event.get("Records", []):
         bucket = rec['s3']['bucket']['name']
         key = unquote_plus(rec['s3']['object']['key'])
@@ -26,6 +26,7 @@ def lambda_handler(event, context):
         body = obj['Body'].read()
         match_timeline_json = json.loads(body)
         print(match_timeline_json)
+        out.append(match_timeline_json)
         
         # res = rdsd.execute_statement(
         #     resourceArn=DB_ARN,
@@ -33,4 +34,9 @@ def lambda_handler(event, context):
         #     database=DB_NAME,
         #     sql="SELECT now()"
         # )
+
+    return {
+        "ok": True,
+        "items": out
+    }
         
