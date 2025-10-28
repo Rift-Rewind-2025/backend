@@ -63,7 +63,7 @@ jobs:
           zip -r9 ../../../../${{ env.BASE_FOLDER_NAME }}.zip .
       
       - name: Add ${{ env.BASE_FOLDER_NAME }} files to Zip file
-        run: cd ./${{ env.BASE_FOLDER_NAME }} && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r ${{ env.BASE_FOLDER_NAME }}
+        run: zip -r ${{ env.BASE_FOLDER_NAME }}.zip ${{ env.BASE_FOLDER_NAME }} -x '**/__pycache__/*' '*.pyc'
       
       - name: Add /services files to Zip file
         run: zip -r ${{ env.BASE_FOLDER_NAME }}.zip services -x '**/__pycache__/*' '*.pyc'
