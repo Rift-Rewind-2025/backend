@@ -98,7 +98,7 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
   
       - name: Download Lambda ${{ env.BASE_FOLDER_NAME }}.zip
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.BASE_FOLDER_NAME }}
   
