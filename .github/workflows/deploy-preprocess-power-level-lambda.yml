@@ -7,6 +7,14 @@ on:
     paths:
       - "preprocess-power-level/**"
       - "services/**"
+      - "libs/**"
+      - "requirements.txt"
+  pull_request:
+    branches: [ "main" ] # pull request events on main branch
+    paths:
+      - "preprocess-power-level/**"
+      - "services/**"
+      - "libs/**"
       - "requirements.txt"
 env:
   PYTHON_VERSION: "3.7"
@@ -37,7 +45,7 @@ jobs:
       # cache dependencies
       - name: Virtual ENV
         uses: actions/cache@v4
-        id: cache-env # name for referring later
+        id: cache-venv # name for referring later
         with:
           path: venv # what we cache: the virtual env
           # The cache key depends on requirements.txt
