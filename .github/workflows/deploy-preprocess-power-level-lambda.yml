@@ -63,13 +63,16 @@ jobs:
           zip -r9 ../../../../${{ env.BASE_FOLDER_NAME }}.zip .
       
       - name: Add ${{ env.BASE_FOLDER_NAME }} files to Zip file
-        run: cd ./${{ env.BASE_FOLDER_NAME }} && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+        run: cd ./${{ env.BASE_FOLDER_NAME }} && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r ${{ env.BASE_FOLDER_NAME }}
       
       - name: Add /services files to Zip file
-        run: cd ./services && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+        run: zip -r ${{ env.BASE_FOLDER_NAME }}.zip services -x '**/__pycache__/*' '*.pyc'
 
       - name: Add /libs files to Zip file
-        run: cd ./libs && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+        run: |
+          if [ -d libs ]; then
+            zip -r ${{ env.BASE_FOLDER_NAME }}.zip libs -x '**/__pycache__/*' '*.pyc'
+          fi
 
       - name: Upload zip file artifact
         # uploads artifacts from your workflow allowing you to share data between jobs
