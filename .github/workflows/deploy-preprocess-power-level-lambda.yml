@@ -1,0 +1,75 @@
+name: Deploy Preprocess Power Level Lambda
+
+on:
+  # Trigger the workflow on push
+  push:
+    branches: [ "main" ] # push events on main branch
+    paths:
+      - "preprocess-power-level/**"
+      - "services/**"
+      - "requirements.txt"
+env:
+  PYTHON_VERSION: "3.7"
+  BASE_FOLDER_NAME: "preprocess-power-level"
+
+# the job defines a series of steps that execute on the same runner
+jobs:
+  CI:
+    # Define the runner used in the workflow
+    runs-on: ubuntu-latest
+    steps:
+      # Check out repo so our workflow can access it
+      - uses: actions/checkout@v4
+
+      # Step-1 Setup Python
+      - name: Set up Python
+        # This action sets up a Python environment for use in actions
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          # optional: architecture: x64 x64 or x86. Defaults to x64 if specified
+
+      # Step-2 Install Python Virtual ENV
+      - name: Install Python Virtual ENV
+        run: pip3 install virtualenv
+
+      # Step-3 Setup Virtual ENV
+      # cache dependencies
+      - name: Virtual ENV
+        use: actions/cache@v4
+        id: cache-env # name for referring later
+        with:
+          path: venv # what we cache: the virtual env
+          # The cache key depends on requirements.txt
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+
+      # Step-4 Build a Virtual ENV, but only if it doesn't already exists
+      - name: Activate Virtual ENV
+        run: python -m venv venv && source venv/bin/activate && pip3 install -r requirements.txt
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+      
+      # - name: Run Tests
+      #   # Note that you have to activate the virtualenv in every step
+      #   # because Github actions doesn't preserve the environment
+      #   run: . venv/bin/activate && pytest
+      
+      - name: Create archive of dependencies
+        run: |
+          cd ./venv/lib/python${{ env.PYTHON_VERSION }}/site-packages
+          zip -r9 ../../../../${{ env.BASE_FOLDER_NAME }}.zip .
+      
+      - name: Add ${{ env.BASE_FOLDER_NAME }} files to Zip file
+        run: cd ./${{ env.BASE_FOLDER_NAME }} && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+      
+      - name: Add /services files to Zip file
+        run: cd ./services && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+
+      - name: Upload zip file artifact
+        # uploads artifacts from your workflow allowing you to share data between jobs
+        # Stores data once a workflow is complete
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BASE_FOLDER_NAME }}
+          path: ${{ env.BASE_FOLDER_NAME }}.zip
