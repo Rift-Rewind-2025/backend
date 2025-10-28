@@ -66,6 +66,9 @@ jobs:
       - name: Add /services files to Zip file
         run: cd ./services && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
 
+      - name: Add /libs files to Zip file
+        run: cd ./libs && zip -g ../${{ env.BASE_FOLDER_NAME }}.zip -r .
+
       - name: Upload zip file artifact
         # uploads artifacts from your workflow allowing you to share data between jobs
         # Stores data once a workflow is complete
