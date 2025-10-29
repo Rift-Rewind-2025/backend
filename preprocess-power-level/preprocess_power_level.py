@@ -211,20 +211,21 @@ def lambda_handler(event, context):
         
         obj = s3.get_object(Bucket=bucket, Key=key)
         body = obj['Body'].read()
-        match_json = json.loads(body)
+        matches = json.loads(body)
         
-        player_idx = match_json['metadata']['participants'].index(puuid)
-        match_id = match_json['metadata']['matchId']
-        
-        # extract all the power level metrics from the match object
-        player_metrics = power_level_service.extract_all_metrics(match_json, player_idx)
-        
-        insert_power_metrics(match_id, puuid, player_metrics)
-        
-        # get the power level calculations from the metrics
-        player_power_level = power_level_service.calculate_power_level(player_metrics)
-        
-        insert_power_levels(match_id, puuid, player_power_level)
+        for match_json in matches:
+            player_idx = match_json['metadata']['participants'].index(puuid)
+            match_id = match_json['metadata']['matchId']
+            
+            # extract all the power level metrics from the match object
+            player_metrics = power_level_service.extract_all_metrics(match_json, player_idx)
+            
+            insert_power_metrics(match_id, puuid, player_metrics)
+            
+            # get the power level calculations from the metrics
+            player_power_level = power_level_service.calculate_power_level(player_metrics)
+            
+            insert_power_levels(match_id, puuid, player_power_level)
 
     return {
         "ok": True
