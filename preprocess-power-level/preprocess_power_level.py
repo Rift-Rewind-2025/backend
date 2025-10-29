@@ -19,6 +19,11 @@ BOOL_KEYS_NATIVE   = {"win", "first_blood_assist"}
 
 def normalize(m):
     m = dict(m)  # copy
+    # role -> uppercase canonical
+    if "role_position" in m:
+        rp = str(m["role_position"]).upper()
+        if rp == "MIDDLE": rp = "MID"
+        m["role_position"] = rp
     # ints that should be bools
     for k in BOOL_KEYS_FROM_INT:
         if k in m:
