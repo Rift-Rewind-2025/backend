@@ -114,8 +114,11 @@ jobs:
           aws lambda update-function-code \
           --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
           --s3-bucket ${{ env.S3_BUCKET_NAME }} \
-          --s3-key ${{ env.BASE_FOLDER_NAME }}.zip \
-          --environment '{"Variables":{"DB_ARN":"${{ secrets.DB_ARN }}","SECRET_ARN":"${{ secrets.DB_SECRET_ARN }}","DB_NAME":"${{ secrets.DB_NAME }}"}}'
+          --s3-key ${{ env.BASE_FOLDER_NAME }}.zip
+
+          aws lambda update-function-configuration \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }}}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
