@@ -134,3 +134,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
+          ENV: ${{ secrets.ENV }}
