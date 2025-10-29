@@ -207,7 +207,7 @@ def lambda_handler(event, context):
         key = unquote_plus(rec['s3']['object']['key'])
         
         # get the parent folder path which will be a puuid folder
-        puuid = posixpath.dirname(key)
+        puuid = os.path.basename(os.path.dirname(key))
         
         obj = s3.get_object(Bucket=bucket, Key=key)
         body = obj['Body'].read()
