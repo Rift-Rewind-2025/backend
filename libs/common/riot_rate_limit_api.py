@@ -1,10 +1,11 @@
-from dotenv import load_dotenv
 import requests, threading, os, time
 from collections import defaultdict
 class RiotRateLimitAPI:
     def __init__(self):
          # Get the Riot Token, then set the token as a header param in request.Session
-        assert load_dotenv() == True
+        if os.getenv('ENV', 'local') == 'local':
+            from dotenv import load_dotenv
+            assert load_dotenv() == True
         self.session = requests.Session()
         self.__api_key = os.environ['RIOT_API_KEY']
         assert self.__api_key is not None
