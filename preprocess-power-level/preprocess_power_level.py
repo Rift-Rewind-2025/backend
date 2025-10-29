@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         bucket = rec['s3']['bucket']['name']
         key = unquote_plus(rec['s3']['object']['key'])
         
-        obj = s3.get_object(Bucket=bucket, key=key)
+        obj = s3.get_object(Bucket=bucket, Key=key)
         body = obj['Body'].read()
         match_timeline_json = json.loads(body)
         print(match_timeline_json)
