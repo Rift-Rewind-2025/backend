@@ -1,9 +1,9 @@
 import pandas as pd
 import os, json
 from collections import defaultdict
-from ..constants import LeagueTier, LeagueDivision, LANE_POSITION
+from libs.common.constants import LeagueTier, LeagueDivision, LANE_POSITION
 from typing import Optional
-from ..lib.common.riot_rate_limit_api import RiotRateLimitAPI
+from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 
 class PowerLevelService(RiotRateLimitAPI):
     def __init__(self):
@@ -126,7 +126,6 @@ class PowerLevelService(RiotRateLimitAPI):
         'total_gold': total_gold,
         'gold_per_minute': gold_per_minute,
         'cs_count': (cs_count),
-        'cs_per_minute': None,  # Calculate after
         
         # VISION
         'vision_score': vision_score,
@@ -301,7 +300,7 @@ class PowerLevelService(RiotRateLimitAPI):
         
         
         # win_prob_dataset = pd.DataFrame(columns=win_prob_dataset_columns)
-        base_folder = os.path.join(os.getcwd(), match_folder_dir, f'{tier.value}_{f"{division.value}_" if division else ""}timelines')
+        base_folder = os.path.join(os.getcwd(), match_folder_dir, f'{tier.value}_{f"{division.value}_" if division else ""}match_infos')
         size = 0
         for puuid in os.listdir(base_folder):
             power_level_dataset = pd.DataFrame(columns=power_level_columns)
@@ -317,7 +316,11 @@ class PowerLevelService(RiotRateLimitAPI):
                         
                         match_obj = self.call_endpoint_with_rate_limit(self.match_url.format(match_id=match_id), rate_limits, rate_history) 
                         metrics = self.extract_all_metrics(match_obj, player_idx)
+                        print(metrics)
+                        input()
                         power_level = self.calculate_power_level(metrics)
+                        print(power_level)
+                        input()
                         # TODO: get vision score, total damage dealt, total damage received, kill participation, turret plate taken from match api
                         power_level_dataset.loc[len(power_level_dataset)] = power_level.values()
                         size += 1
@@ -330,5 +333,5 @@ class PowerLevelService(RiotRateLimitAPI):
 
 if __name__ == '__main__':
     power_level = PowerLevelService()
-    power_level.preprocess('rank_timelines', 20, LeagueTier.CHALLENGER)
+    power_level.preprocess('rank_match_info', 20, LeagueTier.CHALLENGER)
         
