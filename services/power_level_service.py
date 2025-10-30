@@ -270,13 +270,11 @@ class PowerLevelService(RiotRateLimitAPI):
         return {
             'total': total,
             'tier': self.get_power_tier(total),
-            'breakdown': {
                 'combat': int(min(combat, 3000)),
                 'objectives': int(min(objectives, 2500)),
                 'vision': int(min(vision, 1500)),
                 'economy': int(min(economy, 1500)),
                 'clutch': int(min(clutch, 1500))
-            }
         }
     
     def preprocess(self, match_folder_dir: str, chunk_size: int, tier: LeagueTier, division: Optional[LeagueDivision] = None):
