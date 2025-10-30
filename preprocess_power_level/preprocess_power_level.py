@@ -1,7 +1,7 @@
 import os, json, boto3, requests
 from dotenv import load_dotenv
 from urllib.parse import unquote_plus
-from preprocess_sql_queries import METRICS_INSERT_SQL, POWER_LEVEL_INSERT_SQL, CHECK_IF_USER_EXISTS_SQL, USER_INSERT_SQL
+from preprocess_power_level.preprocess_sql_queries import METRICS_INSERT_SQL, POWER_LEVEL_INSERT_SQL, CHECK_IF_USER_EXISTS_SQL, USER_INSERT_SQL
 from services.power_level_service import PowerLevelService
 
 load_dotenv()
