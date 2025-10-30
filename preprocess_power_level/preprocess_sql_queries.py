@@ -119,8 +119,8 @@ SELECT EXISTS (
 
 USER_INSERT_SQL = """
 INSERT INTO app.users (
-    puuid, game_name, tag_line, power_level
+    puuid, game_name, tag_line
 ) VALUES (
-  :puuid, :game_name, :tag_line, :power_level
+  :puuid, :game_name, :tag_line
 )
 """
