@@ -94,6 +94,7 @@ def insert_user_if_not_exists(puuid: str):
         resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
         sql=CHECK_IF_USER_EXISTS_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}]
     )
+    print(resp)
     recs = resp.get("records", [])
     if not bool(recs and recs[0][0].get("booleanValue")):
         # user doesn't exist, add to DB
@@ -129,6 +130,8 @@ def lambda_handler(event, context):
         
         # get the parent folder path which will be a puuid folder
         puuid = os.path.basename(os.path.dirname(key))
+        
+        print(bucket, key, puuid)
         
         obj = s3.get_object(Bucket=bucket, Key=key)
         body = obj['Body'].read()
