@@ -116,3 +116,11 @@ SELECT EXISTS (
   SELECT 1 FROM app.users WHERE puuid = :puuid
 ) AS exists;
 """
+
+USER_INSERT_SQL = """
+INSERT INTO app.users (
+    puuid, game_name, tag_line, power_level
+) VALUES (
+  :puuid, :game_name, :tag_line, :power_level
+)
+"""
