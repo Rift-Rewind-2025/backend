@@ -12,7 +12,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  BASE_FOLDER_NAME: "preprocess-power-level"
+  BASE_FOLDER_NAME: "preprocess_power_level"
   S3_BUCKET_NAME: "rift-rewind-chrisbryann"
   LAMBDA_FUNCTION_NAME: "preprocess-power-level"
 
