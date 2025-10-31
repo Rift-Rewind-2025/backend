@@ -3,12 +3,12 @@ name: Deploy Preprocess Power Level Lambda
 on:
   push:
     branches: [ "main", "development" ]
-    paths:
-      - "preprocess-power-level/**"
-      - "preprocess_power_level/**"
-      - "services/**"
-      - "libs/**"
-      - "requirements.txt"
+    # paths:
+    #   - "preprocess-power-level/**"
+    #   - "preprocess_power_level/**"
+    #   - "services/**"
+    #   - "libs/**"
+    #   - "requirements.txt"
 
 env:
   PYTHON_VERSION: "3.12"

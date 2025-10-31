@@ -4,12 +4,12 @@ on:
   # Trigger the workflow on push
   push:
     branches: [ "main", "development" ] # push events on main branch
-    paths:
-      - "api/**" # TODO: UNCOMMENT WHEN YML FILE IS READY
-      - "tests/**"
-      - "services/**"
-      - "libs/**"
-      - "requirements.txt"
+    # paths:
+    #   - "api/**" # TODO: UNCOMMENT WHEN YML FILE IS READY
+    #   - "tests/**"
+    #   - "services/**"
+    #   - "libs/**"
+    #   - "requirements.txt"
 
 env:
   PYTHON_VERSION: "3.12"
