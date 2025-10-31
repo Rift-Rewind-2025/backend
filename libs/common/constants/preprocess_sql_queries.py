@@ -110,17 +110,3 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
   clutch     = EXCLUDED.clutch,
   total      = EXCLUDED.total;
 """
-
-CHECK_IF_USER_EXISTS_SQL = """
-SELECT EXISTS (
-  SELECT 1 FROM app.users WHERE puuid = :puuid
-) AS exists;
-"""
-
-USER_INSERT_SQL = """
-INSERT INTO app.users (
-    puuid, game_name, tag_line
-) VALUES (
-  :puuid, :game_name, :tag_line
-)
-"""

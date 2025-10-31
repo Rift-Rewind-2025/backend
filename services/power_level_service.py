@@ -1,7 +1,7 @@
 import pandas as pd
 import os, json
 from collections import defaultdict
-from libs.common.constants import LeagueTier, LeagueDivision, LANE_POSITION
+from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LANE_POSITION
 from typing import Optional
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 

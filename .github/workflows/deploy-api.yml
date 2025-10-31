@@ -1,20 +1,21 @@
-name: Deploy Preprocess Power Level Lambda
+name: Deploy API
 
 on:
   # Trigger the workflow on push
   push:
     branches: [ "main", "development" ] # push events on main branch
     paths:
-      - "preprocess-power-level/**" # TODO: UNCOMMENT WHEN YML FILE IS READY
+      - "api/**" # TODO: UNCOMMENT WHEN YML FILE IS READY
+      - "tests/**"
       - "services/**"
       - "libs/**"
       - "requirements.txt"
 
 env:
   PYTHON_VERSION: "3.12"
-  BASE_FOLDER_NAME: "preprocess_power_level"
+  BASE_FOLDER_NAME: "api"
   S3_BUCKET_NAME: "rift-rewind-chrisbryann"
-  LAMBDA_FUNCTION_NAME: "preprocess-power-level"
+  LAMBDA_FUNCTION_NAME: "api"
 
 # the job defines a series of steps that execute on the same runner
 jobs:
@@ -54,10 +55,19 @@ jobs:
         run: python -m venv venv && source venv/bin/activate && pip3 install -r requirements.txt
         if: steps.cache-venv.outputs.cache-hit != 'true'
       
-      # - name: Run Tests
-      #   # Note that you have to activate the virtualenv in every step
-      #   # because Github actions doesn't preserve the environment
-      #   run: . venv/bin/activate && pytest
+      - name: Run Tests
+        # Note that you have to activate the virtualenv in every step
+        # because Github actions doesn't preserve the environment
+        run: . venv/bin/activate && pytest -q
+        env:
+            DB_ARN: ${{ secrets.secrets.DB_ARN }}
+            SECRET_ARN: ${{ secrets.SECRET_ARN }}
+            DB_NAME: ${{ secrets.DB_NAME }}
+            RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+            AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+            
       
       - name: Create archive of dependencies
         run: |

@@ -1,12 +1,15 @@
 import os, json, boto3, requests
 from dotenv import load_dotenv
 from urllib.parse import unquote_plus
-from preprocess_power_level.preprocess_sql_queries import METRICS_INSERT_SQL, POWER_LEVEL_INSERT_SQL, CHECK_IF_USER_EXISTS_SQL, USER_INSERT_SQL
+from libs.common.constants.preprocess_sql_queries import METRICS_INSERT_SQL, POWER_LEVEL_INSERT_SQL
+from libs.common.constants.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL
+from libs.common.rds_service import RdsDataService
 from services.power_level_service import PowerLevelService
 
 load_dotenv()
 
-rdsd = boto3.client("rds-data")
+# rdsd = boto3.client("rds-data")
+rds_service = RdsDataService.from_env()
 s3 = boto3.client("s3")
 DB_ARN     = os.environ["DB_ARN"]
 SECRET_ARN = os.environ["SECRET_ARN"]
@@ -50,53 +53,56 @@ def nv(name, value):
 def insert_power_metrics(match_id: str, puuid: str, metrics: dict):
     m = normalize(metrics)
 
-    params = [nv("match_id", match_id), nv("puuid", puuid)] + [
-        nv(k, m.get(k)) for k in [
-          "champion_name","role_position","champ_level",
-          "game_duration","win",
-          "kills","deaths","assists",
-          "total_damage_dealt","total_damage_taken","damage_per_minute",
-          "team_damage_percentage","damage_taken_on_team_percentage",
-          "total_gold","gold_per_minute","cs_count",
-          "vision_score","wards_placed","wards_destroyed","vision_score_per_minute",
-          "dragons_killed","barons_killed","heralds_killed","turrets_destroyed","turret_plates_taken",
-          "skillshots_hit","skillshot_accuracy","skillshots_dodged","immobilize_and_kill",
-          "solo_kills","outnumbered_kills","double_kills","triple_kills","quadra_kills","penta_kills",
-          "killing_sprees","largest_killing_spree","first_blood_taken","first_blood_assist",
-          "kill_participation","full_team_takedowns","save_ally_from_death","pick_kill_with_ally","kill_after_hidden",
-          "longest_time_living","time_spent_dead","survived_three_immobilizes","deaths_by_enemy_champs",
-          "time_ccing_others","enemy_immobilizations",
-          "legendary_items_count","max_level_lead","takedowns_first_10min",
-          "flawless_aces","perfect_game"
-        ]
-    ]
+    # params = [nv("match_id", match_id), nv("puuid", puuid)] + [
+    #     nv(k, m.get(k)) for k in [
+    #       "champion_name","role_position","champ_level",
+    #       "game_duration","win",
+    #       "kills","deaths","assists",
+    #       "total_damage_dealt","total_damage_taken","damage_per_minute",
+    #       "team_damage_percentage","damage_taken_on_team_percentage",
+    #       "total_gold","gold_per_minute","cs_count",
+    #       "vision_score","wards_placed","wards_destroyed","vision_score_per_minute",
+    #       "dragons_killed","barons_killed","heralds_killed","turrets_destroyed","turret_plates_taken",
+    #       "skillshots_hit","skillshot_accuracy","skillshots_dodged","immobilize_and_kill",
+    #       "solo_kills","outnumbered_kills","double_kills","triple_kills","quadra_kills","penta_kills",
+    #       "killing_sprees","largest_killing_spree","first_blood_taken","first_blood_assist",
+    #       "kill_participation","full_team_takedowns","save_ally_from_death","pick_kill_with_ally","kill_after_hidden",
+    #       "longest_time_living","time_spent_dead","survived_three_immobilizes","deaths_by_enemy_champs",
+    #       "time_ccing_others","enemy_immobilizations",
+    #       "legendary_items_count","max_level_lead","takedowns_first_10min",
+    #       "flawless_aces","perfect_game"
+    #     ]
+    # ]
 
-    return rdsd.execute_statement(
-        resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-        sql=METRICS_INSERT_SQL, parameters=params
-    )
+    # return rdsd.execute_statement(
+    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
+    #     sql=METRICS_INSERT_SQL, parameters=params
+    # )
+    
+    return rds_service.exec(METRICS_INSERT_SQL, {**metrics, "match_id": match_id, "puuid": puuid})
     
 def insert_power_levels(match_id: str, puuid: str, power_levels: dict):
-    params = [nv("match_id", match_id), nv("puuid", puuid)] + [
-        nv(k, power_levels.get(k)) for k in [
-          "combat", "objectives", "vision", "economy", "clutch", "total"
-        ]
-    ]
+    # params = [nv("match_id", match_id), nv("puuid", puuid)] + [
+    #     nv(k, power_levels.get(k)) for k in [
+    #       "combat", "objectives", "vision", "economy", "clutch", "total"
+    #     ]
+    # ]
 
-    return rdsd.execute_statement(
-        resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-        sql=POWER_LEVEL_INSERT_SQL, parameters=params
-    )
+    # return rdsd.execute_statement(
+    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
+    #     sql=POWER_LEVEL_INSERT_SQL, parameters=params
+    # )
+    return rds_service.exec(POWER_LEVEL_INSERT_SQL, {**power_levels, "match_id": match_id, "puuid": puuid})
 
 def insert_user_if_not_exists(puuid: str):
     # check if user exists in DB
-    resp = rdsd.execute_statement(
-        resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-        sql=CHECK_IF_USER_EXISTS_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}]
-    )
-    print(resp)
-    recs = resp.get("records", [])
-    if not bool(recs and recs[0][0].get("booleanValue")):
+    # resp = rdsd.execute_statement(
+    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
+    #     sql=CHECK_IF_USER_EXISTS_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}]
+    # )
+    row = rds_service.query_one(CHECK_IF_USER_EXISTS_SQL, {"puuid": puuid})
+    print(row)
+    if not bool(row['exists']):
         # user doesn't exist, add to DB
         # first, get the game_name and tag_line from RIOT API
         res = requests.get(GET_NAME_BY_PUUID_URL.format(puuid=puuid), headers={
@@ -106,12 +112,13 @@ def insert_user_if_not_exists(puuid: str):
         player = res.json()
         game_name = player['gameName']
         tag_line = player['tagLine']
-        rdsd.execute_statement(
-            resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-            sql=USER_INSERT_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}, 
-                                                {"name": "game_name", "value": {"stringValue": game_name}},
-                                                {"name": "tag_line", "value": {"stringValue": tag_line}},]
-        )
+        # rdsd.execute_statement(
+        #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
+        #     sql=USER_INSERT_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}, 
+        #                                         {"name": "game_name", "value": {"stringValue": game_name}},
+        #                                         {"name": "tag_line", "value": {"stringValue": tag_line}},]
+        # )
+        rds_service.exec(INSERT_USER_SQL, {"puuid": puuid, "game_name": game_name, "tag_line": tag_line})
 
         
 

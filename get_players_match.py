@@ -4,7 +4,7 @@ import os, json, requests, time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from collections import defaultdict
-from libs.common.constants import LeagueTier, LeagueDivision, LeagueQueue
+from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LeagueQueue
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 
 
@@ -12,8 +12,8 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
     def __init__(self):
         super().__init__()
         self.high_tiers = {LeagueTier.CHALLENGER, LeagueTier.GRANDMASTER, LeagueTier.MASTER}
-        self.high_tier_url = 'https://na10.api.riotgames.com/lol/league/v4/{tier}leagues/by-queue/{queue}'
-        self.normal_tier_url = 'https://na10.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}'
+        self.high_tier_url = 'https://na1.api.riotgames.com/lol/league/v4/{tier}leagues/by-queue/{queue}'
+        self.normal_tier_url = 'https://na1.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}'
         self.match_puuid_v5_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}&startTime={startTime}&endTime={endTime}&type={type}'
         self.match_v5_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'
         self.match_v5_info_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/info'
@@ -59,9 +59,9 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         except requests.exceptions.HTTPError as e:
             print('get_top_n_players_rank - HTTPError:', e)
             
-    def get_match_ids_by_puuid(self, puuid: str, start: int = 0, count: int = 100, startTime: Optional[int] = None, endTime: Optional[int] = None, type: Optional[str] = "") -> list[str]:
+    def get_match_ids_by_puuid(self, puuid: str, start: int = 0, count: int = 10, startTime: Optional[int] = None, endTime: Optional[int] = None, type: Optional[str] = "") -> list[str]:
         try:
-            match_ids_res = self.session.get(self.match_puuid_v5_url.format(start=start, count=count, startTime=startTime or "", endTime=endTime or "", type=type))
+            match_ids_res = self.session.get(self.match_puuid_v5_url.format(puuid=puuid, start=start, count=count, startTime=startTime or "", endTime=endTime or "", type=type))
             match_ids_res.raise_for_status()
             return match_ids_res.json()
         except requests.exceptions.HTTPError as e:
@@ -88,7 +88,7 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
             print('Request Error:', e)
             return None
         
-    def download_players_yearly_match_info(self, puuid: str, save_directory: str, count: int = 100):
+    def download_players_yearly_match_info(self, puuid: str, save_directory: str, count: int = 10):
         '''
         Downloads the players one year's worth of match info (RANKED ONLY, no tourneys or tutorials or normals)
         '''
@@ -107,9 +107,9 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         now = datetime.now(self.tz)
         last_year_from_now = None
         try:
-            last_year_from_now = now.replace(year=now.year - 10)
+            last_year_from_now = now.replace(year=now.year - 1)
         except ValueError:
-            last_year_from_now = now.replace(year=now.year - 10, day=28)
+            last_year_from_now = now.replace(year=now.year - 1, day=28)
         last_year_from_now = int(last_year_from_now.timestamp())
         now = int(now.timestamp())
         
@@ -124,7 +124,7 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
                 f.write(json.dumps(match_obj, indent=4))
             
             start += count
-            bulk_count += 10
+            bulk_count += 1
         
     def download_n_players_rank_match_info(self, n: int, save_directory: str, queue: LeagueQueue, tier: LeagueTier, division: Optional[LeagueDivision] = None):
         if not os.path.exists('rank_match_info'):
@@ -132,9 +132,9 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         
         # Get a year's worth of match info from N Challenger players
         top_n_players_by_rank = self.get_top_n_players_by_rank(n, queue, tier, division)
-        time.sleep(10) # sleep for 10 second
+        time.sleep(1) # sleep for 1 second
         for p_player in top_n_players_by_rank:
-            self.download_players_yearly_match_info(p_player, os.path.join('rank_match_info', save_directory), 100)
+            self.download_players_yearly_match_info(p_player, os.path.join('rank_match_info', save_directory), 10)
             
         print(f"Successfully downloaded {n} player(s) year's worth of match info from {tier}{f' {division}' if division else ''} in {queue}!")
             
