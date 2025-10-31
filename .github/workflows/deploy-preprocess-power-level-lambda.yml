@@ -88,15 +88,19 @@ jobs:
 
       - name: Build layer in Lambda base image (ensures binary compatibility)
         run: |
-          docker run --rm -v "$PWD":/opt -w /opt public.ecr.aws/lambda/python:3.12 bash -lc '
-            rm -rf layer && mkdir -p layer/python
-            # install your deps to layer/python. If you want to slim it, create requirements-layer.txt.
-            pip install --no-cache-dir -r requirements.txt -t layer/python
-            # prune junk to save MB
-            find layer/python -type d -name "__pycache__" -prune -exec rm -rf {} +
-            find layer/python -type d -name "tests" -prune -exec rm -rf {} +
-            cd layer && zip -r ../layer.zip python
-          '
+          docker run --rm \
+            --entrypoint /bin/bash \
+            -v "$PWD":/opt -w /opt \
+            public.ecr.aws/lambda/python:${{ env.PYTHON_VERSION }} \
+            -lc '
+              rm -rf layer && mkdir -p layer/python
+              # install only runtime deps (use requirements-layer.txt if you have one)
+              pip install --no-cache-dir -r requirements.txt -t layer/python
+              # prune junk to save MB
+              find layer/python -type d -name "__pycache__" -prune -exec rm -rf {} +
+              find layer/python -type d -name "tests" -prune -exec rm -rf {} +
+              cd layer && zip -r ../layer.zip python
+            '
 
       - name: Upload layer zip artifact
       # uploads artifacts from your workflow allowing you to share data between jobs
