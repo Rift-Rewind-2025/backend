@@ -17,7 +17,7 @@ env:
   S3_BUCKET_NAME: "rift-rewind-chrisbryann"
   LAMBDA_FUNCTION_NAME: "rift-rewind-api"
   DOCKERFILE_NAME: "Dockerfile.api"
-  ECR_REPO_NAME: "preprocess-power-level"    # <— new: ECR repo to hold the image
+  ECR_REPO_NAME: "rift-rewind-api"    # <— new: ECR repo to hold the image
   IMAGE_TAG: "${{ github.sha }}"             # <— new: image tag
 
 # the job defines a series of steps that execute on the same runner
@@ -148,7 +148,7 @@ jobs:
 
       - name: Build, tag, and push image
         run: |
-          docker build -t $ECR_REPO_NAME:${{ env.IMAGE_TAG }} ./${{ env.DOCKERFILE_NAME }}
+          docker build -t $ECR_REPO_NAME:${{ env.IMAGE_TAG }} -f ${{ env.DOCKERFILE_NAME }} .
           docker tag  $ECR_REPO_NAME:${{ env.IMAGE_TAG }} $ECR_URI:${{ env.IMAGE_TAG }}
           docker push $ECR_URI:${{ env.IMAGE_TAG }}
 
