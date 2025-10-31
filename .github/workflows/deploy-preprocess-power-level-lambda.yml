@@ -4,18 +4,19 @@ on:
   # Trigger the workflow on push
   push:
     branches: [ "main", "development" ] # push events on main branch
-    # paths:
-    #   - "preprocess-power-level/**"
-    #   - "preprocess_power_level/**"
-    #   - "services/**"
-    #   - "libs/**"
-    #   - "requirements.txt"
+    paths:
+      - "preprocess-power-level/**"
+      - "preprocess_power_level/**"
+      - "services/**"
+      - "libs/**"
+      - "requirements.txt"
 
 env:
   PYTHON_VERSION: "3.12"
   BASE_FOLDER_NAME: "preprocess_power_level"
   S3_BUCKET_NAME: "rift-rewind-chrisbryann"
   LAMBDA_FUNCTION_NAME: "preprocess-power-level"
+  DOCKERFILE_NAME: "Dockerfile.preprocess_power_level"
   LAYER_NAME: "riftrewind-deps" # << new
 
 # the job defines a series of steps that execute on the same runner

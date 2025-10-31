@@ -219,3 +219,4 @@ __marimo__/
 match_info*.json
 *infos/
 power_level*.csv
+*.zip
