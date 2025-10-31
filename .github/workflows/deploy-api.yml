@@ -101,6 +101,8 @@ jobs:
     needs: [CI]
     # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install AWS CLI
         uses: unfor19/install-aws-cli-action@v1
         with:
