@@ -9,12 +9,12 @@ router = APIRouter(prefix='/power-level/{puuid}', tags=['power-level'])
 def get_rds(request: Request) -> RdsDataService:
     return request.app.state.rds
 
-@router.get('/')
+@router.get('')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
     '''
     Gets all players match power level from AWS Aurora RDS
     '''
-    return rds.query(GET_PLAYER_POWER_LEVELS_SQL, {"puuid": puuid})
+    return rds.query(GET_PLAYER_POWER_LEVELS_SQL, {"puuid": puuid, "skip": skip, "limit": limit})
 
 @router.get('/{match_id}')
 def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):

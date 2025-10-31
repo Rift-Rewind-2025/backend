@@ -71,31 +71,6 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
             AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
             
-      
-    #   - name: Create archive of dependencies
-    #     run: |
-    #       cd ./venv/lib/python${{ env.PYTHON_VERSION }}/site-packages
-    #       zip -r9 ../../../../${{ env.BASE_FOLDER_NAME }}.zip .
-      
-    #   - name: Add ${{ env.BASE_FOLDER_NAME }} files to Zip file
-    #     run: zip -r ${{ env.BASE_FOLDER_NAME }}.zip ${{ env.BASE_FOLDER_NAME }} -x '**/__pycache__/*' '*.pyc'
-      
-    #   - name: Add /services files to Zip file
-    #     run: zip -r ${{ env.BASE_FOLDER_NAME }}.zip services -x '**/__pycache__/*' '*.pyc'
-
-    #   - name: Add /libs files to Zip file
-    #     run: |
-    #       if [ -d libs ]; then
-    #         zip -r ${{ env.BASE_FOLDER_NAME }}.zip libs -x '**/__pycache__/*' '*.pyc'
-    #       fi
-
-    #   - name: Upload zip file artifact
-    #     # uploads artifacts from your workflow allowing you to share data between jobs
-    #     # Stores data once a workflow is complete
-    #     uses: actions/upload-artifact@v4
-    #     with:
-    #       name: ${{ env.BASE_FOLDER_NAME }}
-    #       path: ${{ env.BASE_FOLDER_NAME }}.zip
   CD:
     runs-on: ubuntu-latest
     needs: [CI]
@@ -121,18 +96,6 @@ jobs:
       
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-  
-    #   - name: Download Lambda ${{ env.BASE_FOLDER_NAME }}.zip
-    #     uses: actions/download-artifact@v4
-    #     with:
-    #       name: ${{ env.BASE_FOLDER_NAME }}
-  
-    #   - name: Upload to S3
-    #     run: aws s3 cp ${{ env.BASE_FOLDER_NAME }}.zip s3://${{ env.S3_BUCKET_NAME }}/${{ env.BASE_FOLDER_NAME }}.zip
-    #     env:
-    #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-    #       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
        
       - name: Ensure ECR repository exists
         id: ensure-ecr

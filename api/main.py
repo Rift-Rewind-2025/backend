@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from libs.common.rds_service import RdsDataService
 from api.power_level.routers import router as power_level_router
+from api.users.routers import router as users_router
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -21,3 +22,4 @@ def get():
 
 # include the routers
 app.include_router(power_level_router)
+app.include_router(users_router)
