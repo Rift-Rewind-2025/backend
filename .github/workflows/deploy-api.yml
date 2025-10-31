@@ -15,7 +15,7 @@ env:
   PYTHON_VERSION: "3.12"
   BASE_FOLDER_NAME: "api"
   S3_BUCKET_NAME: "rift-rewind-chrisbryann"
-  LAMBDA_FUNCTION_NAME: "api"
+  LAMBDA_FUNCTION_NAME: "rift-rewind-api"
 
 # the job defines a series of steps that execute on the same runner
 jobs:

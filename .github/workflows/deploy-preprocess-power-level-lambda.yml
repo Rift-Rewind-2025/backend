@@ -1,8 +1,9 @@
 name: Deploy Preprocess Power Level Lambda
 
 on:
+  # Trigger the workflow on push
   push:
-    branches: [ "main", "development" ]
+    branches: [ "main", "development" ] # push events on main branch
     # paths:
     #   - "preprocess-power-level/**"
     #   - "preprocess_power_level/**"
@@ -17,29 +18,40 @@ env:
   LAMBDA_FUNCTION_NAME: "preprocess-power-level"
   LAYER_NAME: "riftrewind-deps" # << new
 
+# the job defines a series of steps that execute on the same runner
 jobs:
   CI:
+    # Define the runner used in the workflow
     runs-on: ubuntu-22.04
     steps:
+      # Check out repo so our workflow can access it
       - uses: actions/checkout@v4
 
+      # Step-1 Setup Python
       - name: Set up Python
+        # This action sets up a Python environment for use in actions
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
+          # optional: architecture: x64 x64 or x86. Defaults to x64 if specified
+      
+      # Step-2 Install Python Virtual ENV
       - name: Install Python Virtual ENV
         run: pip3 install virtualenv
-
+      
+      # Step-3 Setup Virtual ENV
+      # cache dependencies
       - name: Virtual ENV cache
         uses: actions/cache@v4
-        id: cache-venv
+        id: cache-venv # name for referring later
         with:
-          path: venv
+          path: venv # what we cache: the virtual env
+          # The cache key depends on requirements.txt
           key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-venv-
 
+      # Step-4 Build a Virtual ENV, but only if it doesn't already exists
       - name: Build venv and install deps
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: python -m venv venv && . venv/bin/activate && pip3 install -r requirements.txt
@@ -87,6 +99,8 @@ jobs:
           '
 
       - name: Upload layer zip artifact
+      # uploads artifacts from your workflow allowing you to share data between jobs
+        # Stores data once a workflow is complete
         uses: actions/upload-artifact@v4
         with:
           name: lambda-layer
@@ -125,7 +139,7 @@ jobs:
           LAYER_OUT=$(aws lambda publish-layer-version \
             --layer-name "${{ env.LAYER_NAME }}" \
             --zip-file fileb://layer.zip \
-            --compatible-runtimes python3.12 \
+            --compatible-runtimes python${{ env.PYTHON_VERSION }} \
             --compatible-architectures x86_64 arm64 \
             --region ${{ secrets.AWS_DEFAULT_REGION }})
           echo "$LAYER_OUT" | jq -r '.LayerVersionArn'
