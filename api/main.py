@@ -2,8 +2,8 @@ from fastapi import FastAPI, Request
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from services.power_level_service import PowerLevelService
-from api.power_level.metrics.routers import router as power_level_metrics_router
-from api.power_level.routers import router as power_level_router
+from api.power_levels.metrics.routers import router as power_level_metrics_router
+from api.power_levels.routers import router as power_level_router
 from api.users.routers import router as users_router
 from contextlib import asynccontextmanager
 import logging, os
@@ -38,8 +38,9 @@ def hello_world():
     return {"message": "Hello World!"}
 
 # include the routers
+# include metrics routers first to define the static routers that are nested under power_level_router
+app.include_router(power_level_metrics_router)
+
 app.include_router(power_level_router)
 
 app.include_router(users_router)
-
-app.include_router(power_level_metrics_router)

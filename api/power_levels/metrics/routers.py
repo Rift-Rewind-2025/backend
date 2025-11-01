@@ -3,11 +3,11 @@ from typing import Annotated
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.power_level_metrics_queries import GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL, GET_PLAYER_POWER_LEVEL_METRICS_SQL, CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL, POWER_LEVEL_METRICS_INSERT_SQL
-from api.power_level.metrics.dtos import CreatePowerLevelMetricsDto, PowerLevelMetrics
+from api.power_levels.metrics.dtos import PowerLevelMetrics
 from api.helpers import get_rds, get_http_service, get_power_level_service
 from services.power_level_service import PowerLevelService
 
-router = APIRouter(prefix='/power-level/{puuid}/metrics', tags=['power-level-metrics'])
+router = APIRouter(prefix='/power-levels/{puuid}/metrics', tags=['power-level-metrics'])
 
 @router.get('')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
@@ -27,19 +27,24 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     
     return rds.query_one(GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL, {"puuid": puuid, "match_id": match_id})
     
-@router.post('')
-def upsert(createPowerLevelMetricsDto: CreatePowerLevelMetricsDto, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds: RdsDataService = Depends(get_rds)):
+@router.post('/{match_id}')
+def upsert(createPowerLevelMetricsDto: PowerLevelMetrics, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
     """
-    Upsert a new metrics row for the player given their PUUID
+    Creates (or updates if exist) a new metrics row for the player given their PUUID
 
     Args:
-        createPowerLevelMetricsDto (CreatePowerLevelMetricsDto): _description_
+        createPowerLevelMetricsDto (PowerLevelMetrics): _description_
         puuid (Annotated[str, Path, optional): _description_. Defaults to 'The Riot PUUID of the player to get')].
+        match_id (Annotated[str, Path, optional): _description_. Defaults to 'The match ID of the match that player is in')].
+        rds (RdsDataService, optional): _description_. Defaults to Depends(get_rds).
+
+    Returns:
+        _type_: _description_
     """
     
-    return rds.exec(POWER_LEVEL_METRICS_INSERT_SQL, createPowerLevelMetricsDto.model_dump(exclude_none=False).items())
+    return rds.exec(POWER_LEVEL_METRICS_INSERT_SQL, {"puuid": puuid, "match_id": match_id, **createPowerLevelMetricsDto.model_dump().items()})
 
-@router.post('/{match_id}')
+@router.post('/generate-by-match-id/{match_id}')
 def generate_metrics_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], http_service: RiotRateLimitAPI = Depends(get_http_service), power_level_service: PowerLevelService = Depends(get_power_level_service)) -> PowerLevelMetrics:
     """
     Generates the metrics of a match based on their given PUUID

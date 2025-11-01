@@ -1,9 +1,6 @@
 from pydantic import BaseModel, Field
 
-class CreatePowerLevelDto(BaseModel):
-    match_id: str = Field(..., description="Match identifier")
-    puuid: str = Field(..., description="Player unique identifier")
-
+class PowerLevel(BaseModel):
     combat: int = Field(..., ge=0, le=3000)
     objectives: int = Field(..., ge=0, le=2500)
     vision: int = Field(..., ge=0, le=1500)
@@ -11,6 +8,9 @@ class CreatePowerLevelDto(BaseModel):
     clutch: int = Field(..., ge=0, le=1500)
 
     total: int = Field(..., ge=0, le=10000, description="Sum of all subscores (0–10000)")
+class CreatePowerLevelDto(PowerLevel):
+    match_id: str = Field(..., description="Match identifier")
+    puuid: str = Field(..., description="Player unique identifier")
 
     model_config = {
         "from_attributes": True,
@@ -27,3 +27,4 @@ class CreatePowerLevelDto(BaseModel):
             }
         },
     }
+    
