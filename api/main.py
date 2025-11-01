@@ -3,7 +3,7 @@ from libs.common.rds_service import RdsDataService
 from api.power_level.routers import router as power_level_router
 from api.users.routers import router as users_router
 from contextlib import asynccontextmanager
-import logging
+import logging, os
 
 log = logging.getLogger(__name__)
 
