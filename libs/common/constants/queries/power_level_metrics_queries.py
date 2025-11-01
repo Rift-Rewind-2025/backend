@@ -1,4 +1,24 @@
-METRICS_INSERT_SQL = """
+GET_PLAYER_POWER_LEVEL_METRICS_SQL = """
+SELECT *
+FROM app.power_levels.metrics
+WHERE puuid = :puuid
+LIMIT :limit
+OFFSET :skip
+"""
+
+GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL = """
+SELECT *
+FROM app.power_levels.metrics
+WHERE puuid = :puuid AND match_id = :match_id
+"""
+
+CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL = """
+SELECT EXISTS (
+  SELECT 1 FROM app.power_levels WHERE puuid = :puuid AND match_id = :match_id
+) AS exists;
+"""
+
+POWER_LEVEL_METRICS_INSERT_SQL = """
 INSERT INTO app.power_level_metrics (
   match_id, puuid,
   champion_name, role_position, champ_level,
@@ -37,6 +57,7 @@ INSERT INTO app.power_level_metrics (
   :flawless_aces, :perfect_game
 )
 ON CONFLICT (match_id, puuid) DO UPDATE SET
+  updated_at = now(),
   champion_name = EXCLUDED.champion_name,
   role_position = EXCLUDED.role_position,
   champ_level   = EXCLUDED.champ_level,
@@ -92,21 +113,4 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
   takedowns_first_10min = EXCLUDED.takedowns_first_10min,
   flawless_aces         = EXCLUDED.flawless_aces,
   perfect_game          = EXCLUDED.perfect_game;
-"""
-
-POWER_LEVEL_INSERT_SQL = """
-INSERT INTO app.power_levels (
-  match_id, puuid,
-  combat, objectives, vision, economy, clutch, total
-) VALUES (
-  :match_id, :puuid,
-  :combat, :objectives, :vision, :economy, :clutch, :total
-)
-ON CONFLICT (match_id, puuid) DO UPDATE SET
-  combat     = EXCLUDED.combat,
-  objectives = EXCLUDED.objectives,
-  vision     = EXCLUDED.vision,
-  economy    = EXCLUDED.economy,
-  clutch     = EXCLUDED.clutch,
-  total      = EXCLUDED.total;
 """

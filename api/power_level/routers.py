@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Path, Depends, Request, HTTPException, status
 from typing import Annotated
 from libs.common.rds_service import RdsDataService
-from libs.common.constants.power_level_queries import GET_PLAYER_MATCH_POWER_LEVEL_SQL, GET_PLAYER_POWER_LEVELS_SQL, CHECK_IF_MATCH_POWER_LEVEL_EXISTS_SQL
+from libs.common.riot_rate_limit_api import RiotRateLimitAPI
+from libs.common.constants.queries.power_level_queries import GET_PLAYER_MATCH_POWER_LEVEL_SQL, GET_PLAYER_POWER_LEVELS_SQL, CHECK_IF_MATCH_POWER_LEVEL_EXISTS_SQL, POWER_LEVEL_INSERT_SQL
 from services.power_level_service import PowerLevelService
+from api.power_level.dtos import CreatePowerLevelDto
+from api.power_level.metrics.dtos import PowerLevelMetrics
+from api.power_level.metrics.routers import generate_metrics_by_match_id
+from api.helpers import get_http_service, get_rds, get_power_level_service
 
 router = APIRouter(prefix='/power-level/{puuid}', tags=['power-level'])
-
-def get_rds(request: Request) -> RdsDataService:
-    return request.app.state.rds
 
 @router.get('')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
@@ -33,3 +35,56 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
     Gets the "Spotify Wrapped" data from the power level of the player
     '''
     return {'ok': True}
+
+@router.post('')
+def upsert(createPowerLevelDto: CreatePowerLevelDto, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds: RdsDataService = Depends(get_rds)):
+    """
+    Args:
+        createPowerLevelDto (CreatePowerLevelDto): _description_
+        puuid (Annotated[str, Path, optional): _description_. Defaults to 'The Riot PUUID of the player to get')].
+        rds (RdsDataService, optional): _description_. Defaults to Depends(get_rds).
+    """
+    
+    return rds.exec(POWER_LEVEL_INSERT_SQL, createPowerLevelDto.model_dump().items())
+
+@router.post('/generate-by-metrics')
+def generate_power_level_by_metrics(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], metrics: PowerLevelMetrics, http_service: RiotRateLimitAPI = Depends(get_http_service), power_level_service: PowerLevelService = Depends(get_power_level_service)) -> PowerLevelMetrics:
+    """
+    Generates the power level of a match based on their metrics
+
+    Args:
+        metrics (PowerLevelMetrics): _description_
+        puuid (Annotated[str, Path, optional): _description_. Defaults to 'The Riot PUUID of the player to get')].
+        match_id (Annotated[str, Path, optional): _description_. Defaults to 'The match ID of the match that player is in')].
+        http_service (RiotRateLimitAPI, optional): _description_. Defaults to Depends(get_http_service).
+        power_level_service (PowerLevelService, optional): _description_. Defaults to Depends(get_power_level_service).
+
+    Returns:
+        PowerLevelMetrics: _description_
+    """
+    power_levels = power_level_service.calculate_power_level(metrics)
+    
+    return power_levels
+
+@router.post('/generate-by-match-id/{match_id}')
+def generate_power_level_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], metrics: PowerLevelMetrics, http_service: RiotRateLimitAPI = Depends(get_http_service), power_level_service: PowerLevelService = Depends(get_power_level_service)) -> PowerLevelMetrics:
+    """
+    Generates the power level of a match based on their match ID
+
+
+    Args:
+        metrics (PowerLevelMetrics): _description_
+        puuid (Annotated[str, Path, optional): _description_. Defaults to 'The Riot PUUID of the player to get')].
+        match_id (Annotated[str, Path, optional): _description_. Defaults to 'The match ID of the match that player is in')].
+        http_service (RiotRateLimitAPI, optional): _description_. Defaults to Depends(get_http_service).
+        power_level_service (PowerLevelService, optional): _description_. Defaults to Depends(get_power_level_service).
+
+    Returns:
+        PowerLevelMetrics: _description_
+    """
+    metrics = generate_metrics_by_match_id(puuid, match_id, http_service, power_level_service)
+    
+    # Generate the power levels from the metrics
+    power_levels = power_level_service.calculate_power_level(metrics)
+    
+    return power_levels

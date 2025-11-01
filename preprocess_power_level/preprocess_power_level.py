@@ -1,8 +1,9 @@
 import os, json, boto3, requests
 from dotenv import load_dotenv
 from urllib.parse import unquote_plus
-from libs.common.constants.preprocess_sql_queries import METRICS_INSERT_SQL, POWER_LEVEL_INSERT_SQL
-from libs.common.constants.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL
+from libs.common.constants.queries.power_level_metrics_queries import POWER_LEVEL_METRICS_INSERT_SQL
+from libs.common.constants.queries.power_level_queries import POWER_LEVEL_INSERT_SQL
+from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL
 from libs.common.rds_service import RdsDataService
 from services.power_level_service import PowerLevelService
 
@@ -79,7 +80,7 @@ def insert_power_metrics(match_id: str, puuid: str, metrics: dict):
     #     sql=METRICS_INSERT_SQL, parameters=params
     # )
     
-    return rds_service.exec(METRICS_INSERT_SQL, {**metrics, "match_id": match_id, "puuid": puuid})
+    return rds_service.exec(POWER_LEVEL_METRICS_INSERT_SQL, {**metrics, "match_id": match_id, "puuid": puuid})
     
 def insert_power_levels(match_id: str, puuid: str, power_levels: dict):
     # params = [nv("match_id", match_id), nv("puuid", puuid)] + [

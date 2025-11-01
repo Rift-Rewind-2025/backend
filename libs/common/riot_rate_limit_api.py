@@ -12,7 +12,8 @@ class RiotRateLimitAPI:
         self.session.headers.update({
             'X-Riot-Token': self.__api_key
         })
-
+        self.rate_limits = []
+        self.rate_history = defaultdict(list)
         # use threading lock to update rate limits
         self.lock = threading.Lock()
     
@@ -48,8 +49,13 @@ class RiotRateLimitAPI:
             for _, window in rate_limits:
                 rate_history[window].append(time.time())
 
-    def call_endpoint_with_rate_limit(self, url: str, rate_limits: list[tuple[int, int]], rate_history: dict[list], max_retries: int = 6):
+    def call_endpoint_with_rate_limit(self, url: str, rate_limits: list[tuple[int, int]] = None, rate_history: dict[list] = None, max_retries: int = 6):
         backoff = 0.5
+        if not rate_history:
+            rate_history = self.rate_history
+        if not rate_limits:
+            rate_limits = self.rate_limits
+            
         for _ in range(max_retries):
             try:
                 self.wait_for_request_slot(rate_limits, rate_history)

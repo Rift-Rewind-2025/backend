@@ -5,6 +5,13 @@ MAP_HEIGHT = 16000
 
 LANE_POSITION = ("Top", "Jungle", "Middle", "Bottom", "Utility")
 
+class RolePosition(str, Enum):
+    TOP = "TOP"
+    JUNGLE = "JUNGLE"
+    MIDDLE = "MIDDLE"
+    BOTTOM = "BOTTOM"
+    UTILITY = "UTILITY"
+
 class LeagueTier(Enum):
     IRON = "iron"
     BRONZE = "bronze"

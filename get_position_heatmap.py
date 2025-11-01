@@ -4,7 +4,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from scipy.ndimage import gaussian_filter
 from PIL import Image
 import cv2
-from constants import MAP_HEIGHT, MAP_WIDTH
+from libs.common.constants.league_constants import MAP_HEIGHT, MAP_WIDTH
 import os, json
 
 class LeaguePositionHeatmap:

@@ -4,4 +4,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY api/ api/
 COPY libs/ libs/
 COPY services/ services/
-CMD ["preproces_power_level.preprocess_power_level.lambda_handler"]
+CMD ["preprocess_power_level.preprocess_power_level.lambda_handler"]

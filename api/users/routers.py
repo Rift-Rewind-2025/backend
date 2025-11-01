@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Path, Depends, Request, HTTPException, status
 from libs.common.rds_service import RdsDataService
-from libs.common.constants.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
+from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
+from api.helpers import get_rds
 
 router = APIRouter(prefix='/users', tags=['users'])
 
-def get_rds(request: Request) -> RdsDataService:
-    return request.app.state.rds
 
 @router.get('')
 def find_all(skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
@@ -32,7 +31,7 @@ def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the pl
     
     return rds.query_one(GET_USER_SQL, {"puuid", puuid})
 
-@router.post('/')
+@router.post('')
 def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds)):
     '''
     Creates a user into Aurora RDS DB
