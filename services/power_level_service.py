@@ -25,7 +25,7 @@ class PowerLevelService(RiotRateLimitAPI):
         total_assists = participants['assists']
         total_deaths = participants['deaths']
         total_gold = participants['goldEarned']
-        first_blood_taken = participants['firstBloodKill'] * 1
+        first_blood_taken = participants['firstBloodKill']
         role_position = LANE_POSITION[player_idx % 5]
         
         # OBJECTIVE PARTICIPATION (where player actually helped with objectives)
@@ -97,6 +97,7 @@ class PowerLevelService(RiotRateLimitAPI):
         # SPECIAL ACHIEVEMENTS
         flawless_aces = participants['challenges'].get('flawlessAces', 0)
         perfect_game = participants['challenges'].get('perfectGame', 0) 
+        perfect_game = True if perfect_game else False
         
         return {
         # IDENTITY
