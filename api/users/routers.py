@@ -9,7 +9,7 @@ router = APIRouter(prefix='/users', tags=['users'])
 def get_rds(request: Request) -> RdsDataService:
     return request.app.state.rds
 
-@router.get('/')
+@router.get('')
 def find_all(skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
     '''
     Gets all users from Aurora RDS DB
