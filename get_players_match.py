@@ -4,7 +4,7 @@ import os, json, requests, time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from collections import defaultdict
-from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LeagueQueue
+from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LeagueQueue, MATCH_V5_INFO_URL, MATCH_V5_URL, MATCH_PUUID_V5_URL
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 
 
@@ -14,9 +14,9 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         self.high_tiers = {LeagueTier.CHALLENGER, LeagueTier.GRANDMASTER, LeagueTier.MASTER}
         self.high_tier_url = 'https://na1.api.riotgames.com/lol/league/v4/{tier}leagues/by-queue/{queue}'
         self.normal_tier_url = 'https://na1.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}'
-        self.match_puuid_v5_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}&startTime={startTime}&endTime={endTime}&type={type}'
-        self.match_v5_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'
-        self.match_v5_info_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/info'
+        self.match_puuid_v5_url = MATCH_PUUID_V5_URL
+        self.match_v5_url = MATCH_V5_URL
+        self.match_v5_info_url = MATCH_V5_INFO_URL
         self.tz = ZoneInfo("America/Los_Angeles")
 
     def get_top_n_players_by_rank(self, n: int, queue: LeagueQueue, tier: LeagueTier, division: Optional[LeagueDivision] = None) -> list[str]:
