@@ -2,8 +2,8 @@ import os, json, boto3, requests
 from dotenv import load_dotenv
 from urllib.parse import unquote_plus
 from libs.common.constants.queries.power_level_metrics_queries import POWER_LEVEL_METRICS_INSERT_SQL
-from libs.common.constants.queries.power_level_queries import POWER_LEVEL_INSERT_SQL
-from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL
+from libs.common.constants.queries.power_level_queries import POWER_LEVEL_INSERT_SQL, GET_PLAYER_MATCH_POWER_LEVEL_COUNT
+from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_AVERAGE_POWER_LEVEL_SQL
 from libs.common.rds_service import RdsDataService
 from services.power_level_service import PowerLevelService
 
@@ -80,7 +80,7 @@ def insert_power_metrics(match_id: str, puuid: str, metrics: dict):
     #     sql=METRICS_INSERT_SQL, parameters=params
     # )
     
-    return rds_service.exec(POWER_LEVEL_METRICS_INSERT_SQL, {**metrics, "match_id": match_id, "puuid": puuid})
+    return rds_service.exec(POWER_LEVEL_METRICS_INSERT_SQL, {**m, "match_id": match_id, "puuid": puuid})
     
 def insert_power_levels(match_id: str, puuid: str, power_levels: dict):
     # params = [nv("match_id", match_id), nv("puuid", puuid)] + [
@@ -121,6 +121,12 @@ def insert_user_if_not_exists(puuid: str):
         # )
         rds_service.exec(INSERT_USER_SQL, {"puuid": puuid, "game_name": game_name, "tag_line": tag_line})
 
+def get_player_match_power_level_count(puuid: str):
+    row = rds_service.query_one(GET_PLAYER_MATCH_POWER_LEVEL_COUNT, {"puuid": puuid})
+    return int(row['count'])
+
+def calculate_user_avg_power_level(puuid: str):
+    return rds_service.exec(UPDATE_USER_AVERAGE_POWER_LEVEL_SQL, {"puuid": puuid})
         
 
 
@@ -131,7 +137,7 @@ def lambda_handler(event, context):
         event: Dict containing the Lambda function event data
         context: Lambda runtime context
     '''
-    out = []
+    
     for rec in event.get("Records", []):
         bucket = rec['s3']['bucket']['name']
         key = unquote_plus(rec['s3']['object']['key'])
@@ -148,7 +154,6 @@ def lambda_handler(event, context):
         # check to see if the user already exists in DB, if it doesn't create a new user in DB
         insert_user_if_not_exists(puuid)
         
-        
         for match_json in matches:
             player_idx = match_json['metadata']['participants'].index(puuid)
             match_id = match_json['metadata']['matchId']
@@ -162,6 +167,14 @@ def lambda_handler(event, context):
             player_power_level = power_level_service.calculate_power_level(player_metrics)
             
             insert_power_levels(match_id, puuid, player_power_level)
+            
+            # check if there are already 200 power level matches
+            if get_player_match_power_level_count(puuid) == 200:
+                # calculate avg power level
+                calculate_user_avg_power_level(puuid)
+            
+        # if it does, calculate user's average power level   
+        calculate_user_avg_power_level(puuid)
 
     return {
         "ok": True

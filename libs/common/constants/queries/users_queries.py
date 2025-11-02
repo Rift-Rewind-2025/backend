@@ -34,3 +34,15 @@ SET game_name = COALESCE(:game_name, game_name),
 WHERE puuid = :puuid
 RETURNING id, puuid, game_name, tag_line, updated_at;
 """
+
+UPDATE_USER_AVERAGE_POWER_LEVEL_SQL = """
+UPDATE app.users u
+SET power_level = COALESCE(pl.avg_total, 0)
+FROM (
+  SELECT AVG(total)::double precision AS avg_total
+  FROM app.power_levels
+  WHERE puuid = :puuid
+) pl
+WHERE u.puuid = :puuid
+RETURNING u.puuid, u.power_level;
+"""

@@ -35,3 +35,9 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
   clutch     = EXCLUDED.clutch,
   total      = EXCLUDED.total;
 """
+
+GET_PLAYER_MATCH_POWER_LEVEL_COUNT = """
+SELECT COUNT(match_id) as count,
+FROM app.power_levels
+WHERE puuid = :puuid
+"""

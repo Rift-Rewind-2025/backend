@@ -3,9 +3,12 @@ from libs.common.rds_service import RdsDataService
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
-from api.helpers import get_rds
+from api.helpers import get_rds, get_lambda_client, get_user_created_fn_name
+import boto3, json, logging
+from botocore.exceptions import ClientError
 
 router = APIRouter(prefix='/users', tags=['users'])
+log = logging.getLogger(__name__)
 
 
 @router.get('')
@@ -32,7 +35,7 @@ def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the pl
     return rds.query_one(GET_USER_SQL, {"puuid", puuid})
 
 @router.post('')
-def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds)):
+def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds), lambda_client: boto3.Session.client = Depends(get_lambda_client), user_created_fn: str = Depends(get_user_created_fn_name)):
     '''
     Creates a user into Aurora RDS DB
     Body:
@@ -42,7 +45,18 @@ def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds))
     if bool(row['exists']):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User already exists!")
     
-    return rds.exec(INSERT_USER_SQL, {"puuid": createUserDto.puuid, "game_name": createUserDto.game_name, "tag_line": createUserDto.tag_line})
+    user = rds.exec(INSERT_USER_SQL, {"puuid": createUserDto.puuid, "game_name": createUserDto.game_name, "tag_line": createUserDto.tag_line})
+    
+    try:
+        lambda_client.invoke( # invokes the get player match lambda function when user is created
+            FunctionName=user_created_fn,
+            InvocationType="Event",        # async
+            Payload=json.dumps({"puuid": createUserDto.puuid}).encode("utf-8"),
+        )
+    except ClientError:
+        log.exception("Failed to invoke %s", user_created_fn)
+    
+    return user
 
 @router.patch('/{puuid}')
 def update(updateUserDto: UpdateUserDto, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds: RdsDataService = Depends(get_rds)):

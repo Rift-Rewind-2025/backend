@@ -5,6 +5,13 @@ MAP_HEIGHT = 16000
 
 LANE_POSITION = ("Top", "Jungle", "Middle", "Bottom", "Utility")
 
+# Riot API URLs
+MATCH_PUUID_V5_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start={start}&count={count}&startTime={startTime}&endTime={endTime}&type={type}'
+MATCH_V5_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'
+MATCH_V5_INFO_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/info'
+PLAYER_RANK_URL = 'https://{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}'
+GET_PLAYER_ACTIVE_REGION_URL = 'https://americas.api.riotgames.com/riot/account/v1/region/by-game/lol/by-puuid/{puuid}'
+
 class RolePosition(str, Enum):
     TOP = "TOP"
     JUNGLE = "JUNGLE"

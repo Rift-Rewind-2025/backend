@@ -1,0 +1,122 @@
+name: Deploy Preprocess Power Level Lambda
+
+on:
+  # Trigger the workflow on push
+  push:
+    branches: [ "main", "development" ] # push events on main branch
+    # paths:
+    #   - "get-matches-when-user-created/**"
+    #   - "get_matches_when_user_created/**"
+    #   - "services/**"
+    #   - "libs/**"
+    #   - "requirements.txt"
+
+env:
+  PYTHON_VERSION: "3.12"
+  BASE_FOLDER_NAME: "get_matches_when_user_created"
+  S3_BUCKET_NAME: "rift-rewind-backend"
+  LAMBDA_FUNCTION_NAME: "rift-rewind-get-matches-when-user-created"
+  DOCKERFILE_NAME: "Dockerfile.get_matches_when_user_created"
+  ECR_REPO_NAME: "rift-rewind-get-matches-when-user-created"    # <— new: ECR repo to hold the image
+  IMAGE_TAG: "${{ github.sha }}"             # <— new: image tag
+
+# the job defines a series of steps that execute on the same runner
+jobs:
+  CI:
+    # Define the runner used in the workflow
+    runs-on: ubuntu-22.04
+    steps:
+      # Check out repo so our workflow can access it
+      - uses: actions/checkout@v4
+
+      # Step-1 Setup Python
+      - name: Set up Python
+        # This action sets up a Python environment for use in actions
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          # optional: architecture: x64 x64 or x86. Defaults to x64 if specified
+      
+      # Step-2 Install Python Virtual ENV
+      - name: Install Python Virtual ENV
+        run: pip3 install virtualenv
+      
+      # Step-3 Setup Virtual ENV
+      # cache dependencies
+      - name: Virtual ENV cache
+        uses: actions/cache@v4
+        id: cache-venv # name for referring later
+        with:
+          path: venv # what we cache: the virtual env
+          # The cache key depends on requirements.txt
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+
+      # Step-4 Build a Virtual ENV, but only if it doesn't already exists
+      - name: Build venv and install deps
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: python -m venv venv && . venv/bin/activate && pip3 install -r requirements.txt
+
+
+  CD:
+    runs-on: ubuntu-latest
+    needs: [CI]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+       
+      - name: Ensure ECR repository exists
+        id: ensure-ecr
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION=${{ secrets.AWS_DEFAULT_REGION }}
+          REPO="${{ env.ECR_REPO_NAME }}"
+          aws ecr describe-repositories --repository-names "$REPO" --region "$REGION" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "$REPO" --region "$REGION" >/dev/null
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
+          echo "REGION=$REGION" >> $GITHUB_ENV
+          echo "ECR_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}" >> $GITHUB_ENV
+
+      - name: Build, tag, and push image
+        run: |
+          docker build -t $ECR_REPO_NAME:${{ env.IMAGE_TAG }} -f ${{ env.DOCKERFILE_NAME }} .
+          docker tag  $ECR_REPO_NAME:${{ env.IMAGE_TAG }} $ECR_URI:${{ env.IMAGE_TAG }}
+          docker push $ECR_URI:${{ env.IMAGE_TAG }}
+
+      # - name: Update Lambda to use image and wait
+      #   run: |
+      #     aws lambda update-function-code \
+      #       --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+      #       --image-uri "$ECR_URI:${{ env.IMAGE_TAG }}"
+      #     aws lambda wait function-updated --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
+
+      # - name: Update AWS Lambda environment variables
+      #   run: |
+      #     aws lambda update-function-configuration \
+      #       --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+      #       --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }},S3_BUCKET_NAME=${{ env.S3_BUCKET_NAME }}}"
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+      #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
