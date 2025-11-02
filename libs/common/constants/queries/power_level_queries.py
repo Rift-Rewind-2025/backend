@@ -37,7 +37,7 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
 """
 
 GET_PLAYER_MATCH_POWER_LEVEL_COUNT = """
-SELECT COUNT(match_id) as count,
+SELECT COUNT(match_id) as count
 FROM app.power_levels
 WHERE puuid = :puuid
 """
