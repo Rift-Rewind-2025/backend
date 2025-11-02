@@ -1,4 +1,4 @@
-name: Deploy Preprocess Power Level Lambda
+name: Deploy Get Matches When User Created Lambda
 
 on:
   # Trigger the workflow on push
