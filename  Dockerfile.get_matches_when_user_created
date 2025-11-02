@@ -1,7 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.12
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY preprocess_power_level/ preprocess_power_level/
+COPY get_matches_when_user_created/ get_matches_when_user_created/
 COPY libs/ libs/
 COPY services/ services/
-CMD ["preprocess_power_level.preprocess_power_level.lambda_handler"]
+CMD ["get_matches_when_user_created.get_matches_when_user_created.lambda_handler"]
