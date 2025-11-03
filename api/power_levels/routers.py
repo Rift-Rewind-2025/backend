@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Path, Depends, HTTPException, status
 from typing import Annotated
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
@@ -6,7 +6,6 @@ from libs.common.constants.queries.power_level_queries import GET_PLAYER_MATCH_P
 from services.power_level_service import PowerLevelService
 from api.power_levels.dtos import PowerLevel
 from api.power_levels.metrics.dtos import PowerLevelMetrics
-from api.power_levels.metrics.routers import generate_metrics_by_match_id
 from api.helpers import get_http_service, get_rds, get_power_level_service
 
 router = APIRouter(prefix='/power-levels/{puuid}', tags=['power-level'])
@@ -25,7 +24,7 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     '''
     row = rds.query_one(CHECK_IF_MATCH_POWER_LEVEL_EXISTS_SQL, {"puuid": puuid})
     if not bool(row['exists']):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Power level with the match_id does not exists!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Power level with the match_id does not exists!")
     
     return rds.query_one(GET_PLAYER_MATCH_POWER_LEVEL_SQL, {"puuid": puuid, "match_id": match_id})
     
@@ -88,7 +87,13 @@ def generate_power_level_by_match_id(puuid: Annotated[str, Path(title='The Riot 
     Returns:
         PowerLevelMetrics: _description_
     """
-    metrics = generate_metrics_by_match_id(puuid, match_id, http_service, power_level_service)
+    match_details = http_service.call_endpoint_with_rate_limit('https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'.format(match_id=match_id))
+    
+    if player_idx := match_details['metadata']['participants'].index(puuid) == -1:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player does not exist for given PUUID!")
+    
+    # Generate the match metrics from the match details
+    metrics = power_level_service.extract_all_metrics(match_details, player_idx)
     
     # Generate the power levels from the metrics
     power_levels = power_level_service.calculate_power_level(metrics)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Path, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
 from api.users.dtos import CreateUserDto, UpdateUserDto
@@ -30,7 +30,7 @@ def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the pl
     '''
     row = rds.query_one(CHECK_IF_USER_EXISTS_SQL, {"puuid": puuid})
     if not bool(row['exists']):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not exists!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exists!")
     
     return rds.query_one(GET_USER_SQL, {"puuid", puuid})
 
@@ -67,6 +67,6 @@ def update(updateUserDto: UpdateUserDto, puuid: Annotated[str, Path(title='The R
     '''
     row = rds.query_one(CHECK_IF_USER_EXISTS_SQL, {"puuid": puuid})
     if not bool(row['exists']):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not exists!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exists!")
     
     return rds.exec(UPDATE_USER_SQL, {"puuid": puuid, "game_name": updateUserDto.game_name, "tag_line": updateUserDto.tag_line})

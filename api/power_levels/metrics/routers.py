@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Path, Depends, HTTPException, status
 from typing import Annotated
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
@@ -23,7 +23,7 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     '''
     row = rds.query_one(CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL, {"puuid": puuid})
     if not bool(row['exists']):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Power level with the match_id does not exists!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Power level with the match_id does not exists!")
     
     return rds.query_one(GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL, {"puuid": puuid, "match_id": match_id})
     
@@ -65,7 +65,7 @@ def generate_metrics_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUI
     match_details = http_service.call_endpoint_with_rate_limit('https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}'.format(match_id=match_id))
     
     if player_idx := match_details['metadata']['participants'].index(puuid) == -1:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Player does not exist for given PUUID!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player does not exist for given PUUID!")
     
     # Generate the match metrics from the match details
     metrics = power_level_service.extract_all_metrics(match_details, player_idx)
