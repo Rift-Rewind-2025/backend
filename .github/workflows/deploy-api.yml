@@ -16,6 +16,7 @@ env:
   BASE_FOLDER_NAME: "api"
   S3_BUCKET_NAME: "rift-rewind-backend"
   LAMBDA_FUNCTION_NAME: "rift-rewind-api"
+  USER_CREATED_FN_NAME: "rift-rewind-get-matches-when-user-created"
   DOCKERFILE_NAME: "Dockerfile.api"
   ECR_REPO_NAME: "rift-rewind-api"    # <— new: ECR repo to hold the image
   IMAGE_TAG: "${{ github.sha }}"             # <— new: image tag
@@ -128,7 +129,7 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }}}"
+            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }},USER_CREATED_FN_NAME=${{ env.USER_CREATED_FN_NAME }}}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
