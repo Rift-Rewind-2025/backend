@@ -21,7 +21,7 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     '''
     Gets the power level of the player with the match ID specified by PUUID
     '''
-    row = rds.query_one(CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL, {"puuid": puuid})
+    row = rds.query_one(CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL, {"puuid": puuid, "match_id": match_id})
     if not bool(row['exists']):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Power level with the match_id does not exists!")
     
