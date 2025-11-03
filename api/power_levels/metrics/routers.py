@@ -42,7 +42,7 @@ def upsert(createPowerLevelMetricsDto: PowerLevelMetrics, puuid: Annotated[str, 
         _type_: _description_
     """
     
-    return rds.exec(POWER_LEVEL_METRICS_INSERT_SQL, {"puuid": puuid, "match_id": match_id, **createPowerLevelMetricsDto.model_dump().items()})
+    return rds.exec(POWER_LEVEL_METRICS_INSERT_SQL, {"puuid": puuid, "match_id": match_id, **createPowerLevelMetricsDto.model_dump()})
 
 @router.post('/generate-by-match-id/{match_id}')
 def generate_metrics_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], http_service: RiotRateLimitAPI = Depends(get_http_service), power_level_service: PowerLevelService = Depends(get_power_level_service)) -> PowerLevelMetrics:

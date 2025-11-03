@@ -50,7 +50,7 @@ def upsert(createPowerLevelDto: PowerLevel, puuid: Annotated[str, Path(title='Th
         _type_: _description_
     """
     
-    return rds.exec(POWER_LEVEL_INSERT_SQL, {"puuid": puuid, "match_id": match_id, **createPowerLevelDto.model_dump().items()})
+    return rds.exec(POWER_LEVEL_INSERT_SQL, {"puuid": puuid, "match_id": match_id, **createPowerLevelDto.model_dump()})
 
 @router.post('/generate-by-metrics')
 def generate_power_level_by_metrics(metrics: PowerLevelMetrics, power_level_service: PowerLevelService = Depends(get_power_level_service)) -> PowerLevelMetrics:
