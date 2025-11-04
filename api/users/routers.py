@@ -13,7 +13,7 @@ router = APIRouter(prefix='/users', tags=['users'])
 log = logging.getLogger(__name__)
 
 
-@router.get('/')
+@router.get('')
 def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     '''
     Gets all users from Aurora RDS DB
