@@ -6,8 +6,7 @@ from api.power_levels.metrics.routers import router as power_level_metrics_route
 from api.power_levels.routers import router as power_level_router
 from api.users.routers import router as users_router
 from contextlib import asynccontextmanager
-import logging, os, boto3
-from botocore.config import Config
+import logging, os
 
 log = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Depends, HTTPException, status
+from fastapi import APIRouter, Path, Query, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
@@ -13,8 +13,8 @@ router = APIRouter(prefix='/users', tags=['users'])
 log = logging.getLogger(__name__)
 
 
-@router.get('')
-def find_all(skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
+@router.get('/')
+def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     '''
     Gets all users from Aurora RDS DB
     Parameters:
