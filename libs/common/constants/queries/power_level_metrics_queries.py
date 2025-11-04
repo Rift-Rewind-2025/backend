@@ -1,6 +1,6 @@
 GET_PLAYER_POWER_LEVEL_METRICS_SQL = """
 SELECT *
-FROM app.power_levels_metrics
+FROM app.power_level_metrics
 WHERE puuid = :puuid
 LIMIT :limit
 OFFSET :skip
@@ -8,13 +8,13 @@ OFFSET :skip
 
 GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL = """
 SELECT *
-FROM app.power_levels_metrics
+FROM app.power_level_metrics
 WHERE puuid = :puuid AND match_id = :match_id
 """
 
 CHECK_IF_MATCH_POWER_LEVEL_METRICS_EXISTS_SQL = """
 SELECT EXISTS (
-  SELECT 1 FROM app.power_levels_metrics WHERE puuid = :puuid AND match_id = :match_id
+  SELECT 1 FROM app.power_level_metrics WHERE puuid = :puuid AND match_id = :match_id
 ) AS exists;
 """
 
