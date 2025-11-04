@@ -2,7 +2,7 @@ from fastapi import APIRouter, Path, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
-from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
+from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL, LeagueQueue
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
 from api.helpers import get_rds, get_lambda_client, get_user_created_fn_name, get_http_service
@@ -55,7 +55,9 @@ def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds),
     # Get player's current rank (we are only doing SOLO ranks to find their "actual" skills)
     player_rank_res = http_service.call_endpoint_with_rate_limit(PLAYER_RANK_URL.format(region=active_region, puuid=createUserDto.puuid))
     
-    p_tier, p_rank = player_rank_res.get('tier', "BRONZE"), player_rank_res.get('rank', 'I')
+    player_rank = next((d for d in player_rank_res if d.get("queueType") == LeagueQueue.RANKED_SOLO_5x5.value), {})
+        
+    p_tier, p_rank = player_rank.get('tier', "GOLD"), player_rank.get('rank', 'I')
     
     user = rds.exec(INSERT_USER_SQL, {"puuid": createUserDto.puuid, "game_name": createUserDto.game_name, "tag_line": createUserDto.tag_line, "real_rank_tier": p_tier, "real_rank_division": p_rank})
     

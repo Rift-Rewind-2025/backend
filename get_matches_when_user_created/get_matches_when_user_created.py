@@ -1,6 +1,6 @@
 import logging, json, os, boto3, uuid
 from botocore.exceptions import ClientError
-from libs.common.constants.league_constants import LeagueTier, MATCH_V5_URL, MATCH_PUUID_V5_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
+from libs.common.constants.league_constants import LeagueTier, LeagueQueue, MATCH_V5_URL, MATCH_PUUID_V5_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from datetime import datetime, timezone
 
@@ -50,7 +50,9 @@ def download_players_yearly_match_info(puuid: str, save_directory: str, count: i
     # Get player's current rank (we are only doing SOLO ranks to find their "actual" skills)
     player_rank_res = riot_api_service.call_endpoint_with_rate_limit(PLAYER_RANK_URL.format(region=active_region, puuid=puuid))
     
-    p_tier, p_rank = player_rank_res.get('tier', "BRONZE"), player_rank_res.get('rank', 'I')
+    player_rank = next((d for d in player_rank_res if d.get("queueType") == LeagueQueue.RANKED_SOLO_5x5.value), {})
+        
+    p_tier, p_rank = player_rank.get('tier', "GOLD"), player_rank.get('rank', 'I')
     
     start = 0
     bulk_count = 0

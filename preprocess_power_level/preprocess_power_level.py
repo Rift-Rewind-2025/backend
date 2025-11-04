@@ -5,7 +5,7 @@ from libs.common.constants.queries.power_level_metrics_queries import POWER_LEVE
 from libs.common.constants.queries.power_level_queries import POWER_LEVEL_INSERT_SQL, GET_PLAYER_MATCH_POWER_LEVEL_COUNT
 from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_AVERAGE_POWER_LEVEL_SQL, UPDATE_USER_STD_POWER_LEVEL_SQL
 from libs.common.constants.queries.rank_norms_queries import REBUILD_RANK_NORMS_SQL
-from libs.common.constants.league_constants import GET_NAME_BY_PUUID_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
+from libs.common.constants.league_constants import GET_NAME_BY_PUUID_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL, LeagueQueue
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from services.power_level_service import PowerLevelService
@@ -84,7 +84,9 @@ def insert_user_if_not_exists(puuid: str):
         # Get player's current rank (we are only doing SOLO ranks to find their "actual" skills)
         player_rank_res = riot_api_service.call_endpoint_with_rate_limit(PLAYER_RANK_URL.format(region=active_region, puuid=puuid))
         
-        p_tier, p_rank = player_rank_res.get('tier', "BRONZE"), player_rank_res.get('rank', 'I')
+        player_rank = next((d for d in player_rank_res if d.get("queueType") == LeagueQueue.RANKED_SOLO_5x5.value), {})
+        
+        p_tier, p_rank = player_rank.get('tier', "GOLD"), player_rank.get('rank', 'I')
         
         rds_service.exec(INSERT_USER_SQL, {"puuid": puuid, "game_name": game_name, "tag_line": tag_line, "real_rank_tier": p_tier, "real_rank_division": p_rank})
 
