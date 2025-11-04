@@ -71,7 +71,7 @@ def insert_user_if_not_exists(puuid: str):
     if not bool(row['exists']):
         # user doesn't exist, add to DB
         # first, get the game_name and tag_line from RIOT API
-        player = riot_api_service.call_endpoint_with_rate_limit(GET_NAME_BY_PUUID_URL)
+        player = riot_api_service.call_endpoint_with_rate_limit(GET_NAME_BY_PUUID_URL.format(puuid=puuid))
         
         game_name = player['gameName']
         tag_line = player['tagLine']
