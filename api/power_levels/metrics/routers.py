@@ -7,16 +7,16 @@ from api.power_levels.metrics.dtos import PowerLevelMetrics
 from api.helpers import get_rds, get_http_service, get_power_level_service
 from services.power_level_service import PowerLevelService
 
-router = APIRouter(prefix='/power-levels/{puuid}/metrics', tags=['power-level-metrics'])
+router = APIRouter(prefix='/power-levels/{puuid}/metrics', tags=['power-levels:metrics'])
 
-@router.get('')
+@router.get('/')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     """
     Gets player's all match power level metrics from AWS Aurora RDS
     """
     return rds.query(GET_PLAYER_POWER_LEVEL_METRICS_SQL, {"puuid": puuid, "skip": skip, "limit": limit})
 
-@router.get('/{match_id}')
+@router.get('/by-match-id/{match_id}')
 def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
     '''
     Gets the power level of the player with the match ID specified by PUUID
@@ -27,7 +27,7 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     
     return rds.query_one(GET_PLAYER_MATCH_POWER_LEVEL_METRICS_SQL, {"puuid": puuid, "match_id": match_id})
     
-@router.post('/{match_id}')
+@router.post('/by-match-id/{match_id}')
 def upsert(createPowerLevelMetricsDto: PowerLevelMetrics, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
     """
     Creates (or updates if exist) a new metrics row for the player given their PUUID

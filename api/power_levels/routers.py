@@ -13,17 +13,17 @@ import os, boto3, json, logging
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
 
-router = APIRouter(prefix='/power-levels/{puuid}', tags=['power-level'])
+router = APIRouter(prefix='/power-levels/{puuid}', tags=['power-levels'])
 log = logging.getLogger(__name__)
 
-@router.get('')
+@router.get('/')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     '''
     Gets all players match power level from AWS Aurora RDS
     '''
     return rds.query(GET_PLAYER_POWER_LEVELS_SQL, {"puuid": puuid, "skip": skip, "limit": limit})
 
-@router.get('/{match_id}')
+@router.get('/by-match-id/{match_id}')
 def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
     '''
     Gets the power level of the player with the match ID specified by PUUID
@@ -99,7 +99,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
         log.exception('Error generating wrapped content for player - %s', e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, details=f"Internal Server error - {e}")
 
-@router.post('/{match_id}')
+@router.post('/by-match-id/{match_id}')
 def upsert(createPowerLevelDto: PowerLevel, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
     """
     Creates (or updates if exist) a power level row in DB for the given PUUID with match ID
