@@ -1,10 +1,13 @@
-import os, json, boto3, requests
+import os, json, boto3, requests, logging
 from dotenv import load_dotenv
 from urllib.parse import unquote_plus
 from libs.common.constants.queries.power_level_metrics_queries import POWER_LEVEL_METRICS_INSERT_SQL
 from libs.common.constants.queries.power_level_queries import POWER_LEVEL_INSERT_SQL, GET_PLAYER_MATCH_POWER_LEVEL_COUNT
-from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_AVERAGE_POWER_LEVEL_SQL
+from libs.common.constants.queries.users_queries import INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_AVERAGE_POWER_LEVEL_SQL, UPDATE_USER_STD_POWER_LEVEL_SQL
+from libs.common.constants.queries.rank_norms_queries import REBUILD_RANK_NORMS_SQL
+from libs.common.constants.league_constants import GET_NAME_BY_PUUID_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
 from libs.common.rds_service import RdsDataService
+from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from services.power_level_service import PowerLevelService
 
 load_dotenv()
@@ -17,12 +20,15 @@ SECRET_ARN = os.environ["SECRET_ARN"]
 DB_NAME    = os.environ["DB_NAME"]
 RIOT_API_KEY = os.environ["RIOT_API_KEY"]
 
+# Logging
+log = logging.getLogger(__name__)
+
 power_level_service = PowerLevelService()
+
+riot_api_service = RiotRateLimitAPI()
 
 BOOL_KEYS_FROM_INT = {"first_blood_taken", "perfect_game"}
 BOOL_KEYS_NATIVE   = {"win", "first_blood_assist"}
-
-GET_NAME_BY_PUUID_URL = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}'
 
 def normalize(m):
     m = dict(m)  # copy
@@ -53,73 +59,34 @@ def nv(name, value):
 
 def insert_power_metrics(match_id: str, puuid: str, metrics: dict):
     m = normalize(metrics)
-
-    # params = [nv("match_id", match_id), nv("puuid", puuid)] + [
-    #     nv(k, m.get(k)) for k in [
-    #       "champion_name","role_position","champ_level",
-    #       "game_duration","win",
-    #       "kills","deaths","assists",
-    #       "total_damage_dealt","total_damage_taken","damage_per_minute",
-    #       "team_damage_percentage","damage_taken_on_team_percentage",
-    #       "total_gold","gold_per_minute","cs_count",
-    #       "vision_score","wards_placed","wards_destroyed","vision_score_per_minute",
-    #       "dragons_killed","barons_killed","heralds_killed","turrets_destroyed","turret_plates_taken",
-    #       "skillshots_hit","skillshot_accuracy","skillshots_dodged","immobilize_and_kill",
-    #       "solo_kills","outnumbered_kills","double_kills","triple_kills","quadra_kills","penta_kills",
-    #       "killing_sprees","largest_killing_spree","first_blood_taken","first_blood_assist",
-    #       "kill_participation","full_team_takedowns","save_ally_from_death","pick_kill_with_ally","kill_after_hidden",
-    #       "longest_time_living","time_spent_dead","survived_three_immobilizes","deaths_by_enemy_champs",
-    #       "time_ccing_others","enemy_immobilizations",
-    #       "legendary_items_count","max_level_lead","takedowns_first_10min",
-    #       "flawless_aces","perfect_game"
-    #     ]
-    # ]
-
-    # return rdsd.execute_statement(
-    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-    #     sql=METRICS_INSERT_SQL, parameters=params
-    # )
     
     return rds_service.exec(POWER_LEVEL_METRICS_INSERT_SQL, {**m, "match_id": match_id, "puuid": puuid})
     
 def insert_power_levels(match_id: str, puuid: str, power_levels: dict):
-    # params = [nv("match_id", match_id), nv("puuid", puuid)] + [
-    #     nv(k, power_levels.get(k)) for k in [
-    #       "combat", "objectives", "vision", "economy", "clutch", "total"
-    #     ]
-    # ]
-
-    # return rdsd.execute_statement(
-    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-    #     sql=POWER_LEVEL_INSERT_SQL, parameters=params
-    # )
     return rds_service.exec(POWER_LEVEL_INSERT_SQL, {**power_levels, "match_id": match_id, "puuid": puuid})
 
 def insert_user_if_not_exists(puuid: str):
-    # check if user exists in DB
-    # resp = rdsd.execute_statement(
-    #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-    #     sql=CHECK_IF_USER_EXISTS_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}]
-    # )
     row = rds_service.query_one(CHECK_IF_USER_EXISTS_SQL, {"puuid": puuid})
     print(row)
     if not bool(row['exists']):
         # user doesn't exist, add to DB
         # first, get the game_name and tag_line from RIOT API
-        res = requests.get(GET_NAME_BY_PUUID_URL.format(puuid=puuid), headers={
-            "X-Riot-Token": RIOT_API_KEY,
-        })
-        res.raise_for_status()
-        player = res.json()
+        player = riot_api_service.call_endpoint_with_rate_limit(GET_NAME_BY_PUUID_URL)
+        
         game_name = player['gameName']
         tag_line = player['tagLine']
-        # rdsd.execute_statement(
-        #     resourceArn=DB_ARN, secretArn=SECRET_ARN, database=DB_NAME,
-        #     sql=USER_INSERT_SQL, parameters=[{"name": "puuid", "value": {"stringValue": puuid}}, 
-        #                                         {"name": "game_name", "value": {"stringValue": game_name}},
-        #                                         {"name": "tag_line", "value": {"stringValue": tag_line}},]
-        # )
-        rds_service.exec(INSERT_USER_SQL, {"puuid": puuid, "game_name": game_name, "tag_line": tag_line})
+        
+        # Get player's active region (NA1, KR, etc)
+        active_region_res = riot_api_service.call_endpoint_with_rate_limit(GET_PLAYER_ACTIVE_REGION_URL.format(puuid=puuid))
+        
+        active_region = active_region_res['region']
+        
+        # Get player's current rank (we are only doing SOLO ranks to find their "actual" skills)
+        player_rank_res = riot_api_service.call_endpoint_with_rate_limit(PLAYER_RANK_URL.format(region=active_region, puuid=puuid))
+        
+        p_tier, p_rank = player_rank_res.get('tier', "BRONZE"), player_rank_res.get('rank', 'I')
+        
+        rds_service.exec(INSERT_USER_SQL, {"puuid": puuid, "game_name": game_name, "tag_line": tag_line, "real_rank_tier": p_tier, "real_rank_division": p_rank})
 
 def get_player_match_power_level_count(puuid: str):
     row = rds_service.query_one(GET_PLAYER_MATCH_POWER_LEVEL_COUNT, {"puuid": puuid})
@@ -127,8 +94,12 @@ def get_player_match_power_level_count(puuid: str):
 
 def calculate_user_avg_power_level(puuid: str):
     return rds_service.exec(UPDATE_USER_AVERAGE_POWER_LEVEL_SQL, {"puuid": puuid})
-        
 
+def calculate_user_std_power_level(puuid: str):
+    return rds_service.exec(UPDATE_USER_STD_POWER_LEVEL_SQL, {"puuid": puuid})
+        
+def rebuild_rank_norms():
+    return rds_service.exec(REBUILD_RANK_NORMS_SQL)
 
 def lambda_handler(event, context):
     '''
@@ -154,6 +125,8 @@ def lambda_handler(event, context):
         # check to see if the user already exists in DB, if it doesn't create a new user in DB
         insert_user_if_not_exists(puuid)
         
+        log.info(f'User PUUID#{puuid} inserted!')
+        
         for match_json in matches:
             player_idx = match_json['metadata']['participants'].index(puuid)
             match_id = match_json['metadata']['matchId']
@@ -163,18 +136,34 @@ def lambda_handler(event, context):
             
             insert_power_metrics(match_id, puuid, player_metrics)
             
+            log.info(f'Power level metrics for PUUID#{puuid} inserted!')
+            
             # get the power level calculations from the metrics
             player_power_level = power_level_service.calculate_power_level(player_metrics)
             
             insert_power_levels(match_id, puuid, player_power_level)
             
+            log.info(f'Power level for PUUID#{puuid} inserted!')
+            
             # check if there are already 200 power level matches
             if get_player_match_power_level_count(puuid) == 200:
                 # calculate avg power level
                 calculate_user_avg_power_level(puuid)
+                # rebuild rank norms
+                rebuild_rank_norms()
+                # update the user's standardized power level
+                calculate_user_std_power_level(puuid)
+                
+                
             
         # if it does, calculate user's average power level   
         calculate_user_avg_power_level(puuid)
+        
+        # at the end, rebuild rank norms after averaging user's power level
+        rebuild_rank_norms()
+        
+        # now, after rebuilding the rank normalizations, we update the standardized power level
+        calculate_user_std_power_level(puuid)
 
     return {
         "ok": True

@@ -11,6 +11,7 @@ MATCH_V5_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_i
 MATCH_V5_INFO_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/info'
 PLAYER_RANK_URL = 'https://{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}'
 GET_PLAYER_ACTIVE_REGION_URL = 'https://americas.api.riotgames.com/riot/account/v1/region/by-game/lol/by-puuid/{puuid}'
+GET_NAME_BY_PUUID_URL = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}'
 
 class RolePosition(str, Enum):
     TOP = "TOP"

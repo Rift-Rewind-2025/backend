@@ -14,9 +14,9 @@ WHERE puuid = :puuid
 
 INSERT_USER_SQL = """
 INSERT INTO app.users (
-    puuid, game_name, tag_line
+    puuid, game_name, tag_line, real_rank_tier, real_rank_division
 ) VALUES (
-  :puuid, :game_name, :tag_line
+  :puuid, :game_name, :tag_line, :real_rank_tier, :real_rank_division
 )
 """
 
@@ -45,4 +45,15 @@ FROM (
 ) pl
 WHERE u.puuid = :puuid
 RETURNING u.puuid, u.power_level;
+"""
+
+UPDATE_USER_STD_POWER_LEVEL_SQL = """
+UPDATE app.users u
+SET power_level_std = 10000 * rn.k_rank *
+                      GREATEST( LEAST( (u.power_level - rn.p10) / NULLIF(rn.p95 - rn.p10, 0), 1), 0 )
+FROM app.rank_norms rn
+WHERE u.puuid = :puuid
+  AND rn.real_rank_tier = u.real_rank_tier
+  AND COALESCE(rn.real_rank_division, '') = COALESCE(u.real_rank_division, '')
+RETURNING u.power_level_std;
 """

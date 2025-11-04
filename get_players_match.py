@@ -1,8 +1,7 @@
 from dotenv import load_dotenv
 from typing import Optional
 import os, json, requests, time
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from collections import defaultdict
 from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LeagueQueue, MATCH_V5_INFO_URL, MATCH_V5_URL, MATCH_PUUID_V5_URL
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
@@ -17,7 +16,7 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         self.match_puuid_v5_url = MATCH_PUUID_V5_URL
         self.match_v5_url = MATCH_V5_URL
         self.match_v5_info_url = MATCH_V5_INFO_URL
-        self.tz = ZoneInfo("America/Los_Angeles")
+        self.tz = timezone.utc
 
     def get_top_n_players_by_rank(self, n: int, queue: LeagueQueue, tier: LeagueTier, division: Optional[LeagueDivision] = None) -> list[str]:
         '''
@@ -106,10 +105,7 @@ class PlayerMatchDownloader(RiotRateLimitAPI):
         
         now = datetime.now(self.tz)
         last_year_from_now = None
-        try:
-            last_year_from_now = now.replace(year=now.year - 1)
-        except ValueError:
-            last_year_from_now = now.replace(year=now.year - 1, day=28)
+        last_year_from_now = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         last_year_from_now = int(last_year_from_now.timestamp())
         now = int(now.timestamp())
         

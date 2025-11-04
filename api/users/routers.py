@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Path, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
+from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
+from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
-from api.helpers import get_rds, get_lambda_client, get_user_created_fn_name
+from api.helpers import get_rds, get_lambda_client, get_user_created_fn_name, get_http_service
 import boto3, json, logging
 from botocore.exceptions import ClientError
 
@@ -35,7 +37,7 @@ def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the pl
     return rds.query_one(GET_USER_SQL, {"puuid", puuid})
 
 @router.post('')
-def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds), lambda_client: boto3.Session.client = Depends(get_lambda_client), user_created_fn: str = Depends(get_user_created_fn_name)):
+def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds), lambda_client: boto3.Session.client = Depends(get_lambda_client), user_created_fn: str = Depends(get_user_created_fn_name), http_service: RiotRateLimitAPI = Depends(get_http_service) ):
     '''
     Creates a user into Aurora RDS DB
     Body:
@@ -45,7 +47,17 @@ def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds),
     if bool(row['exists']):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User already exists!")
     
-    user = rds.exec(INSERT_USER_SQL, {"puuid": createUserDto.puuid, "game_name": createUserDto.game_name, "tag_line": createUserDto.tag_line})
+    # Get player's active region (NA1, KR, etc)
+    active_region_res = http_service.call_endpoint_with_rate_limit(GET_PLAYER_ACTIVE_REGION_URL.format(puuid=createUserDto.puuid))
+    
+    active_region = active_region_res['region']
+    
+    # Get player's current rank (we are only doing SOLO ranks to find their "actual" skills)
+    player_rank_res = http_service.call_endpoint_with_rate_limit(PLAYER_RANK_URL.format(region=active_region, puuid=createUserDto.puuid))
+    
+    p_tier, p_rank = player_rank_res.get('tier', "BRONZE"), player_rank_res.get('rank', 'I')
+    
+    user = rds.exec(INSERT_USER_SQL, {"puuid": createUserDto.puuid, "game_name": createUserDto.game_name, "tag_line": createUserDto.tag_line, "real_rank_tier": p_tier, "real_rank_division": p_rank})
     
     try:
         lambda_client.invoke( # invokes the get player match lambda function when user is created

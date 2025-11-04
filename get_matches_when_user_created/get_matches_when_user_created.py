@@ -2,8 +2,7 @@ import logging, json, os, boto3, uuid
 from botocore.exceptions import ClientError
 from libs.common.constants.league_constants import LeagueTier, MATCH_V5_URL, MATCH_PUUID_V5_URL, GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 riot_api_service = RiotRateLimitAPI()
@@ -37,12 +36,9 @@ def download_players_yearly_match_info(puuid: str, save_directory: str, count: i
     """
 
     # time window: last year → now (epoch seconds)
-    now_dt = datetime.now(ZoneInfo("America/Los_Angeles"))
-    try:
-        # TODO: limit until Jan 1st of current year
-        last_year_dt = now_dt.replace(year=now_dt.year - 1)
-    except ValueError:  # handle Feb 29 → Feb 28
-        last_year_dt = now_dt.replace(year=now_dt.year - 1, day=28)
+    now_dt = datetime.now(timezone.utc)
+    # TODO: limit until Jan 1st of current year
+    last_year_dt = now_dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
     start_time = int(last_year_dt.timestamp())
     end_time = int(now_dt.timestamp())
 

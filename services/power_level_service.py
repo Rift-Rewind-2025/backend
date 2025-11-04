@@ -42,6 +42,7 @@ class PowerLevelService(RiotRateLimitAPI):
         game_duration = match_obj['info']['gameDuration']
         game_result = participants['win']
         game_minutes = game_duration / 60
+        game_start_time = match_obj['info']['gameStartTimestamp']
         
         # MECHANICAL SKILL
         skillshots_hit = participants['challenges'].get('skillshotsHit', 0)
@@ -108,6 +109,7 @@ class PowerLevelService(RiotRateLimitAPI):
         # GAME CONTEXT
         'game_duration': game_duration,
         'game_minutes': game_minutes,
+        'game_start_time': game_start_time,
         'win': game_result,
         
         # CORE STATS

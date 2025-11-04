@@ -22,7 +22,7 @@ POWER_LEVEL_METRICS_INSERT_SQL = """
 INSERT INTO app.power_level_metrics (
   match_id, puuid,
   champion_name, role_position, champ_level,
-  game_duration, win,
+  game_duration, game_start_time, win,
   kills, deaths, assists,
   total_damage_dealt, total_damage_taken, damage_per_minute,
   team_damage_percentage, damage_taken_on_team_percentage,
@@ -40,7 +40,7 @@ INSERT INTO app.power_level_metrics (
 ) VALUES (
   :match_id, :puuid,
   :champion_name, :role_position, :champ_level,
-  :game_duration, :win,
+  :game_duration, to_timestamp(:game_start_time), :win,
   :kills, :deaths, :assists,
   :total_damage_dealt, :total_damage_taken, :damage_per_minute,
   :team_damage_percentage, :damage_taken_on_team_percentage,
@@ -62,6 +62,7 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
   role_position = EXCLUDED.role_position,
   champ_level   = EXCLUDED.champ_level,
   game_duration = EXCLUDED.game_duration,
+  game_start_time = EXCLUDED.game_start_time,
   win           = EXCLUDED.win,
   kills         = EXCLUDED.kills,
   deaths        = EXCLUDED.deaths,
