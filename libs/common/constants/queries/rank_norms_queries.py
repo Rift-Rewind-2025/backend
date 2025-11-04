@@ -24,7 +24,7 @@ FROM app.power_levels pl
 JOIN app.users u ON u.puuid = pl.puuid
 WHERE u.real_rank_tier IS NOT NULL
 GROUP BY u.real_rank_tier, u.real_rank_division
-ON CONFLICT (real_rank_tier, COALESCE(real_rank_division, ''))
+ON CONFLICT (real_rank_tier, real_rank_division)
 DO UPDATE SET
   p10 = EXCLUDED.p10,
   p95 = EXCLUDED.p95,

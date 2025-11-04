@@ -54,6 +54,6 @@ SET power_level_std = 10000 * rn.k_rank *
 FROM app.rank_norms rn
 WHERE u.puuid = :puuid
   AND rn.real_rank_tier = u.real_rank_tier
-  AND COALESCE(rn.real_rank_division, '') = COALESCE(u.real_rank_division, '')
+  AND rn.real_rank_division = u.real_rank_division
 RETURNING u.power_level_std;
 """
