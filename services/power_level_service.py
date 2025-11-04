@@ -42,7 +42,7 @@ class PowerLevelService(RiotRateLimitAPI):
         game_duration = match_obj['info']['gameDuration']
         game_result = participants['win']
         game_minutes = game_duration / 60
-        game_start_time = match_obj['info']['gameStartTimestamp']
+        game_start_time = match_obj['info']['gameStartTimestamp'] // 1000 #  convert timestamp from milliseconds to seconds (epoch)
         
         # MECHANICAL SKILL
         skillshots_hit = participants['challenges'].get('skillshotsHit', 0)

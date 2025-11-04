@@ -121,8 +121,8 @@ WITH base AS (
   SELECT *
   FROM app.power_level_metrics
   WHERE puuid = :puuid
-    AND created_at >= :start_ts
-    AND created_at <  :end_ts
+    AND game_start_time >= to_timestamp(:start_ts)
+    AND game_start_time <  to_timestamp(:end_ts)
 ),
 acc AS (
   SELECT
