@@ -77,7 +77,7 @@ def download_players_yearly_match_info(puuid: str, save_directory: str, count: i
             match_obj.append(match_info)
 
         # write bulk JSON to S3
-        key = f"{key_prefix}/match_info_bulk_{bulk_count}.json"
+        key = f"{key_prefix}/match_info_bulk_{datetime.now(timezone.utc)}.json"
         uri = put_json_s3(key, match_obj)
         s3_keys.append(uri)
 

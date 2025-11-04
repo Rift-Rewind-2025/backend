@@ -153,43 +153,43 @@ if __name__ == '__main__':
     downloader.download_n_players_rank_match_info(10, 'master_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.MASTER)
     
     # Get a year's worth of match info from 10 Diamond players
-    # downloader.download_n_players_rank_match_info(10, 'diamond_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'diamond_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'diamond_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'diamond_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'diamond_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'diamond_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'diamond_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.DIAMOND, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Emerald players
-    # downloader.download_n_players_rank_match_info(10, 'emerald_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'emerald_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'emerald_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'emerald_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'emerald_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'emerald_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'emerald_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.EMERALD, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Platinum players
-    # downloader.download_n_players_rank_match_info(10, 'platinum_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'platinum_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'platinum_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'platinum_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'platinum_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'platinum_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'platinum_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.PLATINUM, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Gold players
-    # downloader.download_n_players_rank_match_info(10, 'gold_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'gold_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'gold_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'gold_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'gold_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'gold_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'gold_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.GOLD, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Silver players
-    # downloader.download_n_players_rank_match_info(10, 'silver_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'silver_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'silver_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'silver_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'silver_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'silver_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'silver_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.SILVER, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Bronze players
-    # downloader.download_n_players_rank_match_info(10, 'bronze_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'bronze_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'bronze_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'bronze_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'bronze_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'bronze_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'bronze_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.BRONZE, LeagueDivision.IV)
     
     # Get a year's worth of match info from 10 Iron players
-    # downloader.download_n_players_rank_match_info(10, 'iron_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.I)
+    downloader.download_n_players_rank_match_info(10, 'iron_I_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.I)
     downloader.download_n_players_rank_match_info(10, 'iron_II_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.II)
-    # downloader.download_n_players_rank_match_info(10, 'iron_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.III)
-    # downloader.download_n_players_rank_match_info(10, 'iron_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.IV)
+    downloader.download_n_players_rank_match_info(10, 'iron_III_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.III)
+    downloader.download_n_players_rank_match_info(10, 'iron_IV_match_infos', LeagueQueue.RANKED_SOLO_5x5, LeagueTier.IRON, LeagueDivision.IV)
