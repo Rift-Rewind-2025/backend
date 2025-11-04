@@ -6,7 +6,7 @@ SELECT
   percentile_disc(0.10) WITHIN GROUP (ORDER BY pl.total)::double precision AS p10,
   percentile_disc(0.95) WITHIN GROUP (ORDER BY pl.total)::double precision AS p95,
   -- choose your rank constants here (example values; tweak later)
-  CASE u.rank_tier
+  CASE u.real_rank_tier
     WHEN 'IRON' THEN 0.85
     WHEN 'BRONZE' THEN 0.90
     WHEN 'SILVER' THEN 0.95
