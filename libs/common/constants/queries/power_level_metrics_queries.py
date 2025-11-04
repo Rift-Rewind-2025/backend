@@ -115,3 +115,51 @@ ON CONFLICT (match_id, puuid) DO UPDATE SET
   flawless_aces         = EXCLUDED.flawless_aces,
   perfect_game          = EXCLUDED.perfect_game;
 """
+
+GET_AGGREGATED_YEARLY_METRICS_SQL = """
+WITH base AS (
+  SELECT *
+  FROM app.power_level_metrics
+  WHERE puuid = :puuid
+    AND created_at >= :start_ts
+    AND created_at <  :end_ts
+),
+acc AS (
+  SELECT
+    COUNT(*) AS games,
+    SUM(game_duration)                      AS secs_played,
+    SUM(kills)                              AS kills,
+    SUM(deaths)                             AS deaths,
+    SUM(assists)                            AS assists,
+    SUM(cs_count)                           AS cs_total,
+    SUM(total_gold)                         AS gold_total,
+    SUM(total_damage_dealt)                 AS dmg_total,        -- ideally damage to champs
+    SUM(total_damage_taken)                 AS dmg_taken_total,
+    SUM(vision_score)                       AS vision_total,
+    SUM(dragons_killed)                     AS dragons,
+    SUM(barons_killed)                      AS barons,
+    SUM(turrets_destroyed)                  AS towers,
+    SUM(turret_plates_taken)                AS plates,
+    MAX(longest_time_living)                AS longest_living,
+
+    -- Optional weighted sums for ratios if you have them:
+    SUM(kill_participation * (kills + assists)) AS kp_weight,    -- proxy weighting
+    SUM(team_damage_percentage * total_damage_dealt) AS tdp_weight
+  FROM base
+)
+SELECT
+  games,
+  secs_played,
+  -- Recomputed season rates
+  ROUND( (kills + assists)::numeric / GREATEST(deaths,1), 2 )           AS kda_season,
+  ROUND( cs_total::numeric / NULLIF(secs_played/60.0,0), 2 )            AS cs_per_min_season,
+  ROUND( gold_total::numeric / NULLIF(secs_played/60.0,0), 2 )          AS gpm_season,
+  ROUND( dmg_total::numeric  / NULLIF(secs_played/60.0,0), 2 )          AS dpm_season,
+  ROUND( (vision_total::numeric / 10.0) / NULLIF(secs_played/60.0,0),2) AS vision_per_10_season,
+  dragons, barons, towers, plates,
+  longest_living,
+  -- Approximations if you don't store team totals:
+  ROUND( kp_weight / NULLIF(SUM(kills + assists) OVER (),0), 4 )        AS kp_weighted_approx,
+  ROUND( tdp_weight / NULLIF(dmg_total,0), 4 )                          AS team_dmg_pct_weighted_approx
+FROM acc;
+"""

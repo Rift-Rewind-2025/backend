@@ -129,7 +129,7 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }},USER_CREATED_FN_NAME=${{ env.USER_CREATED_FN_NAME }}}"
+            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }},USER_CREATED_FN_NAME=${{ env.USER_CREATED_FN_NAME }},KB_ID=${{ secrets.KB_ID }},MODEL_ARN=${{ secrets.MODEL_ARN }}}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}

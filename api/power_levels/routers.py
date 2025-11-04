@@ -3,12 +3,18 @@ from typing import Annotated
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.power_level_queries import GET_PLAYER_MATCH_POWER_LEVEL_SQL, GET_PLAYER_POWER_LEVELS_SQL, CHECK_IF_MATCH_POWER_LEVEL_EXISTS_SQL, POWER_LEVEL_INSERT_SQL
+from libs.common.constants.queries.power_level_metrics_queries import GET_AGGREGATED_YEARLY_METRICS_SQL
+from libs.common.constants.league_constants import RIFT_WRAPPED_SYSTEM_PROMPT
 from services.power_level_service import PowerLevelService
 from api.power_levels.dtos import PowerLevel
 from api.power_levels.metrics.dtos import PowerLevelMetrics
-from api.helpers import get_http_service, get_rds, get_power_level_service
+from api.helpers import get_http_service, get_rds, get_power_level_service, get_bedrock_runtime_client
+import os, boto3, json, logging
+from datetime import datetime, timezone
+from botocore.exceptions import ClientError
 
 router = APIRouter(prefix='/power-levels/{puuid}', tags=['power-level'])
+log = logging.getLogger(__name__)
 
 @router.get('')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = 0, limit: int = 10, rds: RdsDataService = Depends(get_rds)):
@@ -29,11 +35,69 @@ def find_one_by_match_id(puuid: Annotated[str, Path(title='The Riot PUUID of the
     return rds.query_one(GET_PLAYER_MATCH_POWER_LEVEL_SQL, {"puuid": puuid, "match_id": match_id})
     
 @router.get('/wrapped')
-def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')]):
+def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds_service: RdsDataService = Depends(get_rds), bedrock_client: boto3.Session.client = Depends(get_bedrock_runtime_client)):
     '''
     Gets the "Spotify Wrapped" data from the power level of the player
     '''
-    return {'ok': True}
+    if not (KB_ID := os.getenv('KB_ID')) or not (MODEL_ARN := os.getenv("MODEL_ARN")):
+        raise HTTPException(status_code=500, detail="KB_ID or MODEL_ARN not configured")
+    
+    # Get the aggregated player power level metrics
+    
+    # time window: last year → now (epoch seconds)
+    now_dt = datetime.now(timezone.utc)
+    # limit until Jan 1st of current year
+    last_year_dt = now_dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    start_time = int(last_year_dt.timestamp())
+    end_time = int(now_dt.timestamp())
+    
+    aggregated_player_metrics = rds_service.query_one(GET_AGGREGATED_YEARLY_METRICS_SQL, params={"puuid": puuid, "start_ts": start_time, "end_ts": end_time})
+    
+    print(aggregated_player_metrics)
+    # create the prompt
+    player_json = json.dumps(aggregated_player_metrics, separators=(",", ":"), ensure_ascii=False)
+    prompt = RIFT_WRAPPED_SYSTEM_PROMPT.replace("<<<PASTE PLAYER JSON HERE>>>", player_json)
+    
+    try:
+        response = bedrock_client.retrieve_and_generate(
+            input={"text": prompt},
+            retrieveAndGenerateConfiguration={
+                "type": "KNOWLEDGE_BASE",
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": KB_ID,
+                    "modelArn": MODEL_ARN,
+                    "retrievalConfiguration": {
+                        "vectorSearchConfiguration": {
+                            "overrideSearchType": "HYBRID",
+                            "numberOfResults": 10
+                        },
+                        "metadataConfiguration": {
+                            "filters": {
+                                "andAll": [
+                                    {"in": {"key": "type", "values": ["glossary","rubric","templates","style","example"]}},
+                                    {"equals": {"key": "patch", "value": "14"}},
+                                    {"equals": {"key": "lang", "value": "en"}}
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+             generationConfiguration={
+                "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 1000}},
+                "responseStyle": {"styleType": "JSON"}
+            }
+        )
+        
+        body = response["output"]["text"]
+        
+        return json.loads(body) if body and body.strip().startswith("{") else body
+    except ClientError as ce:
+        log.exception('Bedrock runtime client error - %s', ce)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f'Error with Bedrock runtime client: {ce}')
+    except Exception as e:
+        log.exception('Error generating wrapped content for player - %s', e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, details=f"Internal Server error - {e}")
 
 @router.post('/{match_id}')
 def upsert(createPowerLevelDto: PowerLevel, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
