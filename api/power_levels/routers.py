@@ -74,7 +74,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                         "metadataConfiguration": {
                             "filters": {
                                 "andAll": [
-                                    {"in": {"key": "type", "values": ["glossary","rubric","templates","style","example"]}},
+                                    {"in": {"key": "type", "values": ["glossary","rubric","templates","style","example", "aggregation"]}},
                                     {"equals": {"key": "patch", "value": "14"}},
                                     {"equals": {"key": "lang", "value": "en"}}
                                 ]
