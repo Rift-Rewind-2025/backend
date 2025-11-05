@@ -1,1 +1,7 @@
-{"type":"templates","patch":"14","lang":"en"}
+{
+    "metadataAttributes": {
+        "type": "templates",
+        "patch": "14",
+        "lang": "en"
+    }
+}

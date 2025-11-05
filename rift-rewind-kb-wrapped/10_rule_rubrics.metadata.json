@@ -1,1 +1,14 @@
-{"type":"rubric","patch":"14","roles":["TOP","JUNGLE","MIDDLE","BOTTOM","UTILITY"],"lang":"en"}
+{
+    "metadataAttributes": {
+        "type": "rubric",
+        "patch": "14",
+        "roles": [
+            "TOP",
+            "JUNGLE",
+            "MIDDLE",
+            "BOTTOM",
+            "UTILITY"
+        ],
+        "lang": "en"
+    }
+}
