@@ -68,7 +68,6 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                     "modelArn": MODEL_ARN,
                     "retrievalConfiguration": {
                         "vectorSearchConfiguration": {
-                            "overrideSearchType": "SEMANTIC",
                             "numberOfResults": 10
                         },
                     },

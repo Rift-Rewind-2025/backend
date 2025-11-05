@@ -42,8 +42,8 @@ def get_bedrock_runtime_client() -> boto3.Session.client:
     cfg = Config(
         region_name=os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION"), 
         retries={"max_attempts": 4, "mode": "standard"},
-        read_timeout=20,
-        connect_timeout=5,
+        read_timeout=1200,
+        connect_timeout=30,
                  )
     
     return boto3.client("bedrock-agent-runtime", config=cfg)
