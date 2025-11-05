@@ -97,7 +97,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f'Error with Bedrock runtime client: {ce}')
     except Exception as e:
         log.exception('Error generating wrapped content for player - %s', e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, details=f"Internal Server error - {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal Server error - {e}")
 
 @router.post('/by-match-id/{match_id}')
 def upsert(createPowerLevelDto: PowerLevel, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], match_id: Annotated[str, Path(title='The match ID of the match that player is in')], rds: RdsDataService = Depends(get_rds)):
