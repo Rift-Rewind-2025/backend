@@ -43,6 +43,58 @@ class LeagueQueue(Enum):
     RANKED_SOLO_5x5 = "RANKED_SOLO_5x5"
     RANKED_FLEX_SR = "RANKED_FLEX_SR"
     RANKED_FLEX_TT = "RANKED_FLEX_TT"
+    
+"""
+ROLE POSITION TARGET METRICS FOR POWER LEVEL
+Attained by getting the top 75% of players from 10 different ranks with their yearly match history
+"""
+ROLE_TARGETS = {
+    "BOTTOM": {
+      "kda": 4.8,
+      "dpm": 1016.795,
+      "team_dmg_pct": 0.2811,
+      "cs_per_min": 8.08713170582833,
+      "gpm": 485.595,
+      "vspm": 0.72,
+      "obj_per20": 4.243844572748127
+    },
+    "JUNGLE": {
+      "kda": 5.67,
+      "dpm": 875.51,
+      "team_dmg_pct": 0.2416,
+      "cs_per_min": 5.904977375565611,
+      "gpm": 484.83,
+      "vspm": 1.07,
+      "obj_per20": 4.991861096039067
+    },
+    "MIDDLE": {
+      "kda": 4.67,
+      "dpm": 1002.29,
+      "team_dmg_pct": 0.2791,
+      "cs_per_min": 8.192833437642197,
+      "gpm": 469.5,
+      "vspm": 0.8,
+      "obj_per20": 3.4147694566172935
+    },
+    "TOP": {
+      "kda": 4.0,
+      "dpm": 991.0975,
+      "team_dmg_pct": 0.282,
+      "cs_per_min": 7.983349376547675,
+      "gpm": 479.44,
+      "vspm": 0.69,
+      "obj_per20": 3.6340629903914845
+    },
+    "UTILITY": {
+      "kda": 5.25,
+      "dpm": 526.74,
+      "team_dmg_pct": 0.1578,
+      "cs_per_min": 1.2890025557454757,
+      "gpm": 329.34,
+      "vspm": 2.62,
+      "obj_per20": 3.7974683544303796
+    }
+  }
 
 """ RIFT WRAPPED SYSTEM PROMPT """
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import os, json
 from collections import defaultdict
-from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LANE_POSITION
+from libs.common.constants.league_constants import LeagueTier, LeagueDivision, LANE_POSITION, ROLE_TARGETS
 from typing import Optional
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 
@@ -188,97 +188,175 @@ class PowerLevelService(RiotRateLimitAPI):
         'perfect_game': perfect_game,
     }
         
-    def get_power_tier(self, score: int):
-        """Power tier classifications"""
-        if score >= 8500: return "LEGENDARY"
-        if score >= 7000: return "MYTHIC"
-        if score >= 5500: return "EPIC"
-        if score >= 4000: return "RARE"
-        if score >= 2500: return "UNCOMMON"
-        return "COMMON"
+    def _sat_ratio(self, x, target, hi_cap=1.4):
+        if target <= 0: return 0.0
+        r = max(0.0, min(x / target, hi_cap))
+        return r / hi_cap  # 0..1
 
-    def calculate_power_level(self, metrics: dict):
+    def _cs_per_min(self, m): 
+        return (m.get("cs_count",0)) / max(m.get("game_minutes",0.0), 1e-6)
+    
+    def _obj_per20(self, m):
+        w = (1.2*m.get("dragons_killed",0) +
+            2.0*m.get("barons_killed",0)  +
+            1.4*m.get("heralds_killed",0) +
+            0.8*m.get("turrets_destroyed",0) +
+            0.15*m.get("turret_plates_taken",0))
+        return w / max(m.get("game_minutes",0.0)/20.0, 1e-6)
+
+    def calculate_power_level(self, metrics):
         """
         Calculate power level (0-10,000) across 5 dimensions:
         Combat (30%), Objectives (25%), Vision (15%), Economy (15%), Clutch (15%)
         """
-        role = metrics['role_position']
+        role = metrics["role_position"]
+        T = ROLE_TARGETS.get(role, ROLE_TARGETS["MIDDLE"])
+
+        # Derived
+        cspm = self._cs_per_min(metrics)
+        gpm  = metrics.get("gold_per_minute", 0.0) or 0.0
+        dpm  = metrics.get("damage_per_minute", 0.0) or 0.0
+        vspm = metrics.get("vision_score_per_minute", 0.0) or 0.0
+        obj20 = self._obj_per20(metrics)
+        kda  = metrics.get("kda", 0.0) or 0.0
+        tdp  = metrics.get("team_damage_percentage", 0.0) or 0.0
+        minutes = max(metrics.get("game_minutes",0.0), 1e-6)
+
+        # COMBAT (30%)
+        combat_unit = (0.45*self._sat_ratio(kda, T["kda"], 1.6) +
+                    0.35*self._sat_ratio(dpm, T["dpm"], 1.4) +
+                    0.20*self._sat_ratio(tdp, T["team_dmg_pct"], 1.5))
+        combat = int(3000 * combat_unit)
+
+        # OBJECTIVES (25%)
+        objectives = int(2500 * self._sat_ratio(obj20, T["obj_per20"], 1.6))
+
+        # VISION (15%)
+        vision = int(1500 * self._sat_ratio(vspm, T["vspm"], 1.6))
+
+        # ECONOMY (15%)
+        econ_unit = (0.55*self._sat_ratio(cspm, T["cs_per_min"], 1.4) +
+                    0.45*self._sat_ratio(gpm,  T["gpm"],       1.3))
+        economy = int(1500 * econ_unit)
+
+        # CLUTCH (15%) — normalize by game length (per-20m)
+        spree_unit = min(1.0, (
+            0.10*metrics.get("double_kills",0) +
+            0.30*metrics.get("triple_kills",0) +
+            0.65*metrics.get("quadra_kills",0) +
+            1.00*metrics.get("penta_kills",0)
+        ) / max(1.0, minutes/20.0))
+
+        picks_unit = min(1.0, (
+            0.20*metrics.get("solo_kills",0) +
+            0.25*metrics.get("outnumbered_kills",0) +
+            0.06*metrics.get("largest_killing_spree",0) +
+            (0.15 if metrics.get("first_blood_taken") else 0.0) +
+            0.40*metrics.get("flawless_aces",0)
+        ) / max(1.0, minutes/20.0))
+        clutch = int(1500 * (0.6*spree_unit + 0.4*picks_unit))
+
+        # Bonuses (gentle; after composition)
+        total = combat + objectives + vision + economy + clutch
+        bonus = 1.0
+        if metrics.get("win"): bonus *= 1.08
+        if (metrics.get("perfect_game") or (metrics.get("deaths",0)==0 and metrics.get("kills",0)>0)): bonus *= 1.06
+        if (metrics.get("kill_participation") or 0.0) >= 0.65: bonus *= 1.03
+
+        total = int(min(total * bonus, 10000))
+        return {"total": total, "combat": combat, "objectives": objectives, "vision": vision, "economy": economy, "clutch": clutch}
+        
+    # def get_power_tier(self, score: int):
+    #     """Power tier classifications"""
+    #     if score >= 8500: return "LEGENDARY"
+    #     if score >= 7000: return "MYTHIC"
+    #     if score >= 5500: return "EPIC"
+    #     if score >= 4000: return "RARE"
+    #     if score >= 2500: return "UNCOMMON"
+    #     return "COMMON"
+
+    # def calculate_power_level(self, metrics: dict):
+    #     """
+    #     Calculate power level (0-10,000) across 5 dimensions:
+    #     Combat (30%), Objectives (25%), Vision (15%), Economy (15%), Clutch (15%)
+    #     """
+    #     role = metrics['role_position']
     
-        # === COMBAT PROWESS (30%) - 0-3000 ===
-        kda_score = min(metrics['kda'] * 250, 1000)
-        damage_score = min(metrics['damage_per_minute'] * 0.9, 1000)
-        team_damage_score = min(metrics['team_damage_percentage'] * 3000, 1000)
-        combat = kda_score + damage_score + team_damage_score
+    #     # === COMBAT PROWESS (30%) - 0-3000 ===
+    #     kda_score = min(metrics['kda'] * 250, 1000)
+    #     damage_score = min(metrics['damage_per_minute'] * 0.9, 1000)
+    #     team_damage_score = min(metrics['team_damage_percentage'] * 3000, 1000)
+    #     combat = kda_score + damage_score + team_damage_score
         
-        # === OBJECTIVES (25%) - 0-2500 ===
-        objectives = min(
-            metrics['dragons_killed'] * 250 +
-            metrics['barons_killed'] * 450 +
-            metrics['heralds_killed'] * 180 +
-            metrics['turrets_destroyed'] * 120 +
-            metrics['turret_plates_taken'] * 30,
-            2500
-        )
+    #     # === OBJECTIVES (25%) - 0-2500 ===
+    #     objectives = min(
+    #         metrics['dragons_killed'] * 250 +
+    #         metrics['barons_killed'] * 450 +
+    #         metrics['heralds_killed'] * 180 +
+    #         metrics['turrets_destroyed'] * 120 +
+    #         metrics['turret_plates_taken'] * 30,
+    #         2500
+    #     )
         
-        # === VISION CONTROL (15%) - 0-1500 ===
-        vision_multiplier = 1.6 if role == "SUPPORT" else 1.0
-        vision = min(
-            (metrics['vision_score'] * 18 + 
-            metrics['wards_destroyed'] * 25) * vision_multiplier,
-            1500
-        )
+    #     # === VISION CONTROL (15%) - 0-1500 ===
+    #     vision_multiplier = 1.6 if role == "SUPPORT" else 1.0
+    #     vision = min(
+    #         (metrics['vision_score'] * 18 + 
+    #         metrics['wards_destroyed'] * 25) * vision_multiplier,
+    #         1500
+    #     )
         
-        # === ECONOMY (15%) - 0-1500 ===
-        economy = min(
-            metrics['gold_per_minute'] * 2.2 +
-            (metrics['cs_count'] / max(metrics['game_minutes'], 1)) * 12,
-            1500
-        )
+    #     # === ECONOMY (15%) - 0-1500 ===
+    #     economy = min(
+    #         metrics['gold_per_minute'] * 2.2 +
+    #         (metrics['cs_count'] / max(metrics['game_minutes'], 1)) * 12,
+    #         1500
+    #     )
         
-        # === CLUTCH FACTOR (15%) - 0-1500 ===
-        multikill_score = (
-            metrics['double_kills'] * 100 +
-            metrics['triple_kills'] * 300 +
-            metrics['quadra_kills'] * 600 +
-            metrics['penta_kills'] * 1000
-        )
+    #     # === CLUTCH FACTOR (15%) - 0-1500 ===
+    #     multikill_score = (
+    #         metrics['double_kills'] * 100 +
+    #         metrics['triple_kills'] * 300 +
+    #         metrics['quadra_kills'] * 600 +
+    #         metrics['penta_kills'] * 1000
+    #     )
         
-        clutch = min(
-            metrics['solo_kills'] * 150 +
-            metrics['outnumbered_kills'] * 200 +
-            metrics['largest_killing_spree'] * 80 +
-            multikill_score +
-            (200 if metrics['first_blood_taken'] else 0) +
-            metrics['flawless_aces'] * 400,
-            1500
-        )
+    #     clutch = min(
+    #         metrics['solo_kills'] * 150 +
+    #         metrics['outnumbered_kills'] * 200 +
+    #         metrics['largest_killing_spree'] * 80 +
+    #         multikill_score +
+    #         (200 if metrics['first_blood_taken'] else 0) +
+    #         metrics['flawless_aces'] * 400,
+    #         1500
+    #     )
         
-        # === BONUSES & MULTIPLIERS ===
-        base_total = combat + objectives + vision + economy + clutch
+    #     # === BONUSES & MULTIPLIERS ===
+    #     base_total = combat + objectives + vision + economy + clutch
         
-        # Win bonus
-        if metrics['win']:
-            base_total *= 1.15
+    #     # Win bonus
+    #     if metrics['win']:
+    #         base_total *= 1.15
         
-        # Perfect game (no deaths, kills > 0)
-        if metrics['perfect_game'] or (metrics['deaths'] == 0 and metrics['kills'] > 0):
-            base_total *= 1.12
+    #     # Perfect game (no deaths, kills > 0)
+    #     if metrics['perfect_game'] or (metrics['deaths'] == 0 and metrics['kills'] > 0):
+    #         base_total *= 1.12
         
-        # High kill participation
-        if metrics['kill_participation'] >= 0.75:
-            base_total *= 1.05
+    #     # High kill participation
+    #     if metrics['kill_participation'] >= 0.75:
+    #         base_total *= 1.05
         
-        total = int(min(base_total, 10000))
+    #     total = int(min(base_total, 10000))
         
-        return {
-            'total': total,
-            'tier': self.get_power_tier(total),
-                'combat': int(min(combat, 3000)),
-                'objectives': int(min(objectives, 2500)),
-                'vision': int(min(vision, 1500)),
-                'economy': int(min(economy, 1500)),
-                'clutch': int(min(clutch, 1500))
-        }
+    #     return {
+    #         'total': total,
+    #         'tier': self.get_power_tier(total),
+    #             'combat': int(min(combat, 3000)),
+    #             'objectives': int(min(objectives, 2500)),
+    #             'vision': int(min(vision, 1500)),
+    #             'economy': int(min(economy, 1500)),
+    #             'clutch': int(min(clutch, 1500))
+    #     }
     
     def preprocess(self, match_folder_dir: str, chunk_size: int, tier: LeagueTier, division: Optional[LeagueDivision] = None):
         # get the files from s3 (later)
