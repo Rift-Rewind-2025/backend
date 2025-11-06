@@ -80,8 +80,10 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                 }
             },
         )
-        
+        print(f'response: {response}')
         body = response["output"]["text"]
+        
+        print(f'body: {body}')
         
         return json.loads(body) if body and body.strip().startswith("{") else body
     except ClientError as ce:
