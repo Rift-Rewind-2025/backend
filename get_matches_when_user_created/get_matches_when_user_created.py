@@ -100,7 +100,7 @@ def lambda_handler(event, context):
     try:
         result = download_players_yearly_match_info(puuid, "rank_match_info", 50)
         log.info("DONE corr_id=%s summary=%s", corr_id, json.dumps(result)[:2000])
-        return {"ok": True, "corr_id": corr_id, **result}
+        return {"ok": True, "corr_id": corr_id, "result": result}
     except Exception as exc:
         log.exception("FAILED corr_id=%s puuid=%s", corr_id, puuid)
         return {"ok": False, "error": str(exc), "corr_id": corr_id}

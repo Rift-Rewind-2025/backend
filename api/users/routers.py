@@ -67,8 +67,9 @@ def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds),
             InvocationType="Event",        # async
             Payload=json.dumps({"puuid": createUserDto.puuid}).encode("utf-8"),
         )
-    except ClientError:
+    except ClientError as ce:
         log.exception("Failed to invoke %s", user_created_fn)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to invoke {user_created_fn} - {ce}")
     
     return user
 
