@@ -131,8 +131,8 @@ You MUST:
 Here are the search results in numbered order:
 $search_results$
 
-### Required Output JSON (strict)
-YOU MUST return the result in a SINGLE JSON object:
+### Output (STRICT, ONLY RETURN THIS OBJECT AS OUTPUT)
+YOU MUST return a SINGLE JSON object with the following format:
 {
   "cards": [
     {
@@ -154,7 +154,4 @@ YOU MUST return the result in a SINGLE JSON object:
      "why":"<1 line linking to knowledge base information>"}
   ],
 }
-
-Here are the search results in numbered order:
-$search_results$
 """
