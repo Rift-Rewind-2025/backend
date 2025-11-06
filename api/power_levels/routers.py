@@ -85,7 +85,8 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
         
         print(f'body: {body}')
         
-        return json.loads(body) if body and body.strip().startswith("{") else body
+        # return json.loads(body) if body and body.strip().startswith("{") else body
+        return body
     except ClientError as ce:
         log.exception('Bedrock runtime client error - %s', ce)
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f'Error with Bedrock runtime client: {ce}')
