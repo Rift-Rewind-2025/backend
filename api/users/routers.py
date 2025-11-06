@@ -2,7 +2,7 @@ from fastapi import APIRouter, Path, Query, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
-from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL, LeagueQueue
+from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL, GET_PLAYER_BY_NAME_URL, LeagueQueue
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
 from api.helpers import get_rds, get_lambda_client, get_user_created_fn_name, get_http_service
@@ -85,3 +85,16 @@ def update(updateUserDto: UpdateUserDto, puuid: Annotated[str, Path(title='The R
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User does not exists!")
     
     return rds.exec(UPDATE_USER_SQL, {"puuid": puuid, "game_name": updateUserDto.game_name, "tag_line": updateUserDto.tag_line})
+
+@router.get('/find-player-by-name/{game_name}/{tag_line}')
+def find_player_by_name(game_name: Annotated[str, Path(title='The Summoner name in LoL')], tag_line: Annotated[str, Path(title='The Summoner tag line in LoL')], http_service: RiotRateLimitAPI = Depends(get_http_service)):
+    '''
+    Finds a player PUUID by their game_name and tag_line
+    '''
+
+    player = http_service.call_endpoint_with_rate_limit(GET_PLAYER_BY_NAME_URL.format(game_name=game_name, tag_line=tag_line))
+    
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player with given name and tag line does not exists!")
+    
+    return player
