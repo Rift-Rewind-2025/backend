@@ -75,7 +75,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                         'promptTemplate': {
                             "textPromptTemplate": RIFT_WRAPPED_GENERATION_PROMPT
                             },
-                        "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 40000}},
+                        "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 16384}},
                     }
                 }
             },
