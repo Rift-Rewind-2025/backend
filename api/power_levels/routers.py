@@ -75,7 +75,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                         'promptTemplate': {
                             "textPromptTemplate": RIFT_WRAPPED_GENERATION_PROMPT
                             },
-                        "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 1000}},
+                        "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 40000}},
                     }
                 }
             },
@@ -85,7 +85,7 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
         
         print(f'body: {body}')
         
-        return json.loads(repr(body)) if body and body.strip().startswith("{") else body
+        return json.loads(body) if body and body.strip().startswith("{") else body
         # return body
     except ClientError as ce:
         log.exception('Bedrock runtime client error - %s', ce)
