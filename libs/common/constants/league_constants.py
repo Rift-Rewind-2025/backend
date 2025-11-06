@@ -213,8 +213,10 @@ YOU MUST return the result in a SINGLE JSON object:
   "weaknesses": [
     {"metric":"<e.g., cs_per_minute>","label":"<Low/Avg/Good/Great per rubric>",
      "specific_fix":"<measurable next step, e.g., “+0.3 CS/min; buy 1 control ward by 10:00”>",
-     "why":"<1 line linking to role rubric>"}
+     "why":"<1 line linking to knowledge base information>"}
   ],
-  "disclaimers": ["Only season aggregates from app.power_level_metrics were used; no timeline data."]
 }
+
+Here are the search results in numbered order:
+$search_results$
 """

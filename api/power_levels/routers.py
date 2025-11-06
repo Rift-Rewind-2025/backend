@@ -4,7 +4,7 @@ from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
 from libs.common.constants.queries.power_level_queries import GET_PLAYER_MATCH_POWER_LEVEL_SQL, GET_PLAYER_POWER_LEVELS_SQL, CHECK_IF_MATCH_POWER_LEVEL_EXISTS_SQL, POWER_LEVEL_INSERT_SQL
 from libs.common.constants.queries.power_level_metrics_queries import GET_AGGREGATED_YEARLY_METRICS_SQL
-from libs.common.constants.league_constants import RIFT_WRAPPED_SYSTEM_PROMPT
+from libs.common.constants.league_constants import RIFT_WRAPPED_SYSTEM_PROMPT, RIFT_WRAPPED_GENERATION_PROMPT
 from services.power_level_service import PowerLevelService
 from api.power_levels.dtos import PowerLevel
 from api.power_levels.metrics.dtos import PowerLevelMetrics
@@ -72,8 +72,10 @@ def get_player_power_level_wrapped(puuid: Annotated[str, Path(title='The Riot PU
                         },
                     },
                     "generationConfiguration": {
+                        'promptTemplate': {
+                            "textPromptTemplate": RIFT_WRAPPED_GENERATION_PROMPT
+                            },
                         "inferenceConfig": {"textInferenceConfig": {"temperature": 0.4, "maxTokens": 1000}},
-                        # "responseStyle": {"styleType": "JSON"}
                     }
                 }
             },
