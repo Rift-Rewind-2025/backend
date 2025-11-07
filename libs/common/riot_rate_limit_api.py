@@ -68,6 +68,8 @@ class RiotRateLimitAPI:
                     retry_after = float(response.headers.get('Retry-After', 1))
                     print(f'Rate limited, sleeping for {retry_after}s...')
                     time.sleep(retry_after)
+                elif response.status_code == 404:
+                    return None
                 else:
                     print(f'Server error {response.status_code}, retrying in {backoff}s...')
                     time.sleep(backoff)

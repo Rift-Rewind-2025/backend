@@ -3,7 +3,15 @@ SELECT *
 FROM app.users
 ORDER BY id ASC
 LIMIT :limit
-OFFSET                                                                                                                                                                                                                                                                         :skip
+OFFSET :skip                                                                                                                                                                                                                                                                    :skip
+'''
+
+GET_ALL_USERS_RANKED_SQL = '''
+SELECT *
+FROM app.users
+ORDER BY power_level_std DESC
+LIMIT :limit
+OFFSET :skip                                                                                                                                                                                                                                                               :skip
 '''
 
 GET_USER_SQL = '''

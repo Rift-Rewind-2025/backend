@@ -7,12 +7,12 @@ from api.power_levels.metrics.dtos import PowerLevelMetrics
 from api.helpers import get_rds, get_http_service, get_power_level_service
 from services.power_level_service import PowerLevelService
 
-router = APIRouter(prefix='/power-levels/{puuid}/metrics', tags=['power-levels:metrics'])
+router = APIRouter(prefix='/power-levels/{puuid}/metrics', tags=['power-levels-metrics'])
 
 @router.get('')
 def find_all(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     """
-    Gets player's all match power level metrics from AWS Aurora RDS
+    Gets player's all match power level metrics
     """
     return rds.query(GET_PLAYER_POWER_LEVEL_METRICS_SQL, {"puuid": puuid, "skip": skip, "limit": limit})
 

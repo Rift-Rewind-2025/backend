@@ -12,11 +12,17 @@ from botocore.exceptions import ClientError
 router = APIRouter(prefix='/users', tags=['users'])
 log = logging.getLogger(__name__)
 
+@router.get('/by-power-level')
+def find_all_by_power_level_rank(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
+    '''
+    Gets all players sorted by their power level descending
+    '''
+    return rds.query(GET_ALL_USERS_SQL, {"limit": limit, "skip": skip})
 
 @router.get('')
 def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
     '''
-    Gets all users from Aurora RDS DB
+    Gets all users
     Parameters:
     skip - skips first [skip] rows, defaults to 0
     limit - limits the number of rows returned, defaults to 10
@@ -26,7 +32,7 @@ def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), r
 @router.get('/{puuid}')
 def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds: RdsDataService = Depends(get_rds)):
     '''
-    Gets a user by PUUID from Aurora RDS DB
+    Gets a user by PUUID
     Parameters:
     puuid - The Riot PUUID of the player to get
     '''
@@ -39,7 +45,7 @@ def find_one_by_puuid(puuid: Annotated[str, Path(title='The Riot PUUID of the pl
 @router.post('')
 def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds), lambda_client: boto3.Session.client = Depends(get_lambda_client), user_created_fn: str = Depends(get_user_created_fn_name), http_service: RiotRateLimitAPI = Depends(get_http_service) ):
     '''
-    Creates a user into Aurora RDS DB
+    Creates a user
     Body:
     createUserDto - The user object
     '''
@@ -76,7 +82,7 @@ def create(createUserDto: CreateUserDto, rds: RdsDataService = Depends(get_rds),
 @router.patch('/{puuid}')
 def update(updateUserDto: UpdateUserDto, puuid: Annotated[str, Path(title='The Riot PUUID of the player to get')], rds: RdsDataService = Depends(get_rds)):
     '''
-    Gets a user by PUUID from Aurora RDS DB
+    Gets a user by PUUID
     Parameters:
     puuid - The Riot PUUID of the player to get
     '''
