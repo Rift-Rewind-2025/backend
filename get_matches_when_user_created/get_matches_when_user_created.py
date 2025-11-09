@@ -52,12 +52,12 @@ def download_players_yearly_match_info(puuid: str, save_directory: str, count: i
     
     player_rank = next((d for d in player_rank_res if d.get("queueType") == LeagueQueue.RANKED_SOLO_5x5.value), {})
         
-    p_tier, p_rank = player_rank.get('tier', "GOLD"), player_rank.get('rank', 'I')
+    p_tier, p_rank = player_rank.get('tier', "SILVER"), player_rank.get('rank', 'I')
     
     start = 0
     bulk_count = 0
     s3_keys = []
-    key_prefix = f"{save_directory}/{p_tier}_{f'{p_rank}_' if p_tier not in (LeagueTier.CHALLENGER.name, LeagueTier.GRANDMASTER.name, LeagueTier.MASTER.name) else ""}match_infos/{puuid}"
+    key_prefix = f"{save_directory}/{p_tier.lower()}_{f'{p_rank}_' if p_tier not in (LeagueTier.CHALLENGER.name, LeagueTier.GRANDMASTER.name, LeagueTier.MASTER.name) else ""}match_infos/{puuid}"
 
     while True:
         # page ranked match IDs
