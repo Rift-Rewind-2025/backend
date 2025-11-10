@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path, Query, Depends, HTTPException, status
 from libs.common.rds_service import RdsDataService
 from libs.common.riot_rate_limit_api import RiotRateLimitAPI
-from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL
+from libs.common.constants.queries.users_queries import GET_USER_SQL, GET_ALL_USERS_SQL, INSERT_USER_SQL, CHECK_IF_USER_EXISTS_SQL, UPDATE_USER_SQL, GET_ALL_USERS_RANKED_SQL
 from libs.common.constants.league_constants import GET_PLAYER_ACTIVE_REGION_URL, PLAYER_RANK_URL, GET_PLAYER_BY_NAME_URL, LeagueQueue
 from api.users.dtos import CreateUserDto, UpdateUserDto
 from typing import Annotated
@@ -17,7 +17,8 @@ def find_all_by_power_level_rank(skip: int = Query(0, ge=0), limit: int = Query(
     '''
     Gets all players sorted by their power level descending
     '''
-    return rds.query(GET_ALL_USERS_SQL, {"limit": limit, "skip": skip})
+    print(type(skip), type(limit), skip, limit)
+    return rds.query(GET_ALL_USERS_RANKED_SQL, {"limit": limit, "skip": skip})
 
 @router.get('')
 def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), rds: RdsDataService = Depends(get_rds)):
@@ -27,6 +28,7 @@ def find_all(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200), r
     skip - skips first [skip] rows, defaults to 0
     limit - limits the number of rows returned, defaults to 10
     '''
+    print(type(skip), type(limit), skip, limit)
     return rds.query(GET_ALL_USERS_SQL, {"limit": limit, "skip": skip})
 
 @router.get('/{puuid}')
