@@ -1,0 +1,7 @@
+FROM public.ecr.aws/lambda/python:3.12
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY get_matches_when_user_created/ get_matches_when_user_created/
+COPY libs/ libs/
+COPY services/ services/
+CMD ["get_matches_when_user_created.get_matches_when_user_created.lambda_handler"]

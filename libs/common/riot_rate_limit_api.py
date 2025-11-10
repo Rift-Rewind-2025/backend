@@ -1,17 +1,19 @@
-from dotenv import load_dotenv
 import requests, threading, os, time
 from collections import defaultdict
 class RiotRateLimitAPI:
     def __init__(self):
          # Get the Riot Token, then set the token as a header param in request.Session
-        assert load_dotenv() == True
+        if os.getenv('ENV', 'local') == 'local':
+            from dotenv import load_dotenv
+            assert load_dotenv() == True
         self.session = requests.Session()
         self.__api_key = os.environ['RIOT_API_KEY']
         assert self.__api_key is not None
         self.session.headers.update({
             'X-Riot-Token': self.__api_key
         })
-
+        self.rate_limits = []
+        self.rate_history = defaultdict(list)
         # use threading lock to update rate limits
         self.lock = threading.Lock()
     
@@ -47,8 +49,13 @@ class RiotRateLimitAPI:
             for _, window in rate_limits:
                 rate_history[window].append(time.time())
 
-    def call_endpoint_with_rate_limit(self, url: str, rate_limits: list[tuple[int, int]], rate_history: dict[list], max_retries: int = 6):
+    def call_endpoint_with_rate_limit(self, url: str, rate_limits: list[tuple[int, int]] = None, rate_history: dict[list] = None, max_retries: int = 6):
         backoff = 0.5
+        if not rate_history:
+            rate_history = self.rate_history
+        if not rate_limits:
+            rate_limits = self.rate_limits
+            
         for _ in range(max_retries):
             try:
                 self.wait_for_request_slot(rate_limits, rate_history)
@@ -61,6 +68,8 @@ class RiotRateLimitAPI:
                     retry_after = float(response.headers.get('Retry-After', 1))
                     print(f'Rate limited, sleeping for {retry_after}s...')
                     time.sleep(retry_after)
+                elif response.status_code == 404:
+                    return None
                 else:
                     print(f'Server error {response.status_code}, retrying in {backoff}s...')
                     time.sleep(backoff)
@@ -68,3 +77,5 @@ class RiotRateLimitAPI:
                     response.raise_for_status()
             except requests.exceptions.HTTPError as e:
                 print('Request Error:', e)
+                
+        return None

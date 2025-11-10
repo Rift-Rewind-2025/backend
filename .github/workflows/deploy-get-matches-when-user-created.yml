@@ -1,23 +1,23 @@
-name: Deploy Preprocess Power Level Lambda
+name: Deploy Get Matches When User Created Lambda
 
 on:
   # Trigger the workflow on push
   push:
     branches: [ "main", "development" ] # push events on main branch
     # paths:
-    #   - "preprocess-power-level/**"
-    #   - "preprocess_power_level/**"
+    #   - "get-matches-when-user-created/**"
+    #   - "get_matches_when_user_created/**"
     #   - "services/**"
     #   - "libs/**"
     #   - "requirements.txt"
 
 env:
   PYTHON_VERSION: "3.12"
-  BASE_FOLDER_NAME: "preprocess_power_level"
+  BASE_FOLDER_NAME: "get_matches_when_user_created"
   S3_BUCKET_NAME: "rift-rewind-backend"
-  LAMBDA_FUNCTION_NAME: "rift-rewind-preprocess-power-level"
-  DOCKERFILE_NAME: "Dockerfile.preprocess_power_level"
-  ECR_REPO_NAME: "rift-rewind-preprocess-power-level"    # <— new: ECR repo to hold the image
+  LAMBDA_FUNCTION_NAME: "rift-rewind-get-matches-when-user-created"
+  DOCKERFILE_NAME: "Dockerfile.get_matches_when_user_created"
+  ECR_REPO_NAME: "rift-rewind-get-matches-when-user-created"    # <— new: ECR repo to hold the image
   IMAGE_TAG: "${{ github.sha }}"             # <— new: image tag
 
 # the job defines a series of steps that execute on the same runner
@@ -115,7 +115,7 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }}}"
+            --environment "Variables={DB_ARN=${{ secrets.DB_ARN }},SECRET_ARN=${{ secrets.DB_SECRET_ARN }},DB_NAME=${{ secrets.DB_NAME }},RIOT_API_KEY=${{ secrets.RIOT_API_KEY }},ENV=${{ secrets.ENV }},S3_BUCKET_NAME=${{ env.S3_BUCKET_NAME }}}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
